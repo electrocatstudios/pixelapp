@@ -1,0 +1,86 @@
+body {
+    background-color: black;
+    border: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+
+/*index.html*/
+.main_header{
+    background-color: indianred;
+    border-radius: 10px;
+    max-width: 400px;
+    text-align: center;
+}
+
+a{
+    text-decoration: none;
+    color:  black;
+}
+
+.button_link{
+    display:block;
+
+    min-width: 200px;
+    background-color: grey;
+    text-align: center;
+    height: 60px;
+    line-height: 60px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+
+    max-width: 400px;
+}
+
+.button_link:hover{
+    background-color: honeydew;
+}
+
+.display_panel{
+    width: 100px;
+    height: 100px;
+    background-color: red;
+}
+
+#canvas_div{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    border: solid 2px orange;
+    width:  800px;
+    height: 800px;
+}
+
+.login_box input {
+    margin-top: 20px;
+
+}
+.login_box button {
+    margin-top: 20px;
+}
+
+.game_listing{
+    width: 50vw;
+    height: 60px;
+    background-color: ivory;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    line-height: 60px;
+    border-radius: 10px;
+    transition: all 0.5s ease;
+}
+.game_listing:hover{
+    background-color: rgb(172, 172, 172);
+    transition: all 0.5s ease;
+}
+
+#connection_buttons button {
+    margin-left: 5px; 
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+
+.checkbox_label{
+    color: white;
+}

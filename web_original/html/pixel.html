@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+          integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+          crossorigin="anonymous"></script>
+
+    <link rel='stylesheet' href='/css/pixelapp.css'>
+
+    <title>Pixel App | Electro Cat Studios</title>
+
+    <link href='/css/website.css' rel='stylesheet'>
+    <link href='/css/skeleton.css' rel='stylesheet'>
+
+    <script type='text/javascript' src='/js/pixelapp/main.js{{.RandomNumber}}'></script>
+    <script type='text/javascript' src='/js/pixelapp/drawmanager.js{{.RandomNumber}}'></script>
+    <script type='text/javascript' src='/js/pixelapp/pixelmanager.js{{.RandomNumber}}'></script>
+    <script type='text/javascript' src='/js/pixelapp/toolmanager.js{{.RandomNumber}}'></script>
+    
+    <script type='text/javascript' src='/js/pixelapp/keyHandlerUtils.js{{.RandomNumber}}'></script>
+    <script type='text/javascript' src='/js/pixelapp/utils.js{{.RandomNumber}}'></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta property="og:image" content="https://electrocatstudios.com/img/logo.png" />
+    <script>
+        window.picture_width = {{.Width}};
+        window.picture_height = {{.Height}};
+        window.pixel_size = {{.PixelWidth}};
+        window.pixel_id = "{{.PixelID}}";
+        window.pixel_name = "{{.PixelName}}"
+    </script>
+</head>
+
+<body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>
+    {{.MenuBar}}
+    
+    <div id='error' style='color:red'></div>
+    <div id="canvas-div">
+		<canvas id="canvas"> <!-- width="800" height="400" -->
+			<p>Your browser does not support the canvas element.</p>
+		</canvas>
+	</div>
+    <div class='container' style='text-align: center;'>
+        <div class='row'>
+            <div class='column'>
+                <h5>Frames</h5>
+            </div>
+        </div>
+        <div class='row'>
+            <div id='frame_buttons' class='column'>
+                <button class='frame_button' onclick='load_frame(1)'>1</button>
+                <button class='frame_button' onclick='new_frame()'>+</button>
+            </div>
+        </div>
+    </div>
+    {{.ToolBar}}
+</body>
+</html>

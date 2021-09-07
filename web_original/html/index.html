@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+          integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+          crossorigin="anonymous"></script>
+
+  <link rel='stylesheet' href='/css/pixelapp.css'>
+
+  <title>Pixel App | Electro Cat Studios</title>
+
+  <link href='/css/website.css' rel='stylesheet'>
+  <link href='/css/skeleton.css' rel='stylesheet'>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <meta property="og:image" content="https://electrocatstudios.com/img/logo.png" />
+</head>
+
+<body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>
+    {{.MenuBar}}
+  
+    <br>
+
+    <div class='container'>
+        <div class='row'>
+            <div id='message_banner' style='text-align:center'>
+                <h1>Pixel App</h1>
+            </div>
+        </div>
+    </div>   
+
+    <br><br>
+    <div class='container'>
+        <div class="row choose_menu_items">
+            <a href='/pixelapp/new'>
+                <div class='choose_menu_item'>
+                    New Image        
+                </div>
+            </a>
+        </div>
+
+        <div class="row choose_menu_items">
+            <a href='/pixelapp/newfromimage'>
+                <div class='choose_menu_item'>
+                    Generate From Image      
+                </div>
+            </a>
+        </div>
+
+        <div class="row choose_menu_items">
+            <a href='/pixelapp/load'>
+                <div class='choose_menu_item'>
+                    Saved Images        
+                </div>
+            </a>
+        </div>
+
+        <div class="row choose_menu_items">
+            <a href='/'>
+                <div class='choose_menu_item'>
+                    Back
+                </div>
+            </a>
+        </div>
+    </div>
+  
+
+</body>
+</html>
