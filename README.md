@@ -12,6 +12,13 @@ make a version available online but this is quite a while away (as of time of wr
 This application was originally written in Go but this is a rewrite in Rust. The original
 code was taken from a larger project so may not compile on it's own. 
 
+## Running the application
+To run the application use
+```bash
+cargo run -- --debug --port=5000
+```
+Note: You can leave the port off, the default is `8888`
+
 ## Roadmap
 The current roadmap of items I'll be working on.
 
