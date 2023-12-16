@@ -1,0 +1,62 @@
+/* @font-face {
+    font-family: "Dayswebfont";
+    src: url("/font/Dayswebfont.woff") format("woff"),;
+} */
+
+body {
+    font-family: 'Dayswebfont';
+    background-color: black;
+    color: white;
+ 
+    text-align: center;
+}
+
+#menu_bar {
+    background-color: white;
+    color: black;
+    text-align: center;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+
+}
+
+@media screen and (max-width: 800px) {
+    #menu_bar {
+        height: 40px;
+        padding-top:15px;
+        font-size: 120%;
+    }
+
+    .information {
+        display: inline-block;
+        font-size: 120%;
+    }
+    body {
+        font-size: 100%;
+    }
+}
+@media screen and (min-width: 799px) {
+    body{
+        font-size: 120%;
+    }
+    #menu_bar {
+        height: 40px;
+        padding: 25px;
+        font-size: 200%;
+    }
+
+    .information {
+        display: inline-block;
+        padding-left: 40px;
+        font-size: 120%;
+    }
+    
+}
+#error {
+    margin-top: 100px;
+    color: red;
+    text-align: center;
+}
+

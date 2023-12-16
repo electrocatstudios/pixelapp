@@ -12,8 +12,17 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
         .map(|| format!("ok"))
         .with(cors);
     
+    // GET 404 - catch all
+    let default = warp::any().map(|| {
+        let body: String = fs::read_to_string("templates/404.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_1", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_1", &json!({})).unwrap()
+        )
+    });
     // GET /home - get the main front page
-    let home = warp::any().map(|| {
+    let home = warp::path::end().map(|| {
         let body: String = fs::read_to_string("templates/index.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_1", body).unwrap();
@@ -22,8 +31,33 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
         )
     });
 
+    let new_image_page = warp::path("new").map(|| {
+        let body: String = fs::read_to_string("templates/setuppixel.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_1", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_1", &json!({})).unwrap()
+        )
+    });
+
+    // GET /js/<file> - get named js file
+    let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
+    // GET /css/<file> - get named css file
+    let get_css = warp::path("css").and(warp::fs::dir("./assets/css/"));
+    // GET /font/<file> - get named font file
+    let get_font = warp::path("font").and(warp::fs::dir("./assets/fonts/"));
+    // GET /img/<file> - get named img file
+    let get_img = warp::path("img").and(warp::fs::dir("./assets/fonts/"));
+    
+
     heartbeat 
+        .or(get_img)
+        .or(get_js)
+        .or(get_css)
+        .or(get_font)
+        .or(new_image_page)
         .or(home)
+        .or(default)
         .boxed()
 }
 
