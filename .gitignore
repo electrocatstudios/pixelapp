@@ -109,3 +109,6 @@ dist
 /target
 
 .vscode
+
+# Database stuff
+pixel.db*

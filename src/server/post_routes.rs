@@ -1,8 +1,9 @@
 
 use warp::{filters::BoxedFilter, Filter, Reply};
 use serde_json::json;
+use sqlx::SqlitePool;
 
-pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
+pub(super) fn make_routes(_db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)> {
     // POST routes
     // POST /heartbeat - a POST version of the heartbeat route
     let cors = warp::cors()
@@ -19,7 +20,16 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
             warp::reply::json(&json!({"status": "fail", "message": "Unknown route"}))
         });
 
+    // let create_new_pixel = create_new_pixel(db_conn.clone());
+
     heartbeat_post
         .or(default)
+        // .or(create_new_pixel)
         .boxed()
 }
+
+// fn create_new_pixel(db_conn: &mut SqlitePool) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+//     warp::path!("heartbeat")
+//         .and(warp::any())
+//         .map( move ||  )
+// }

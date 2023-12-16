@@ -3,8 +3,9 @@ use std::fs;
 use serde_json::json;
 use handlebars::Handlebars;
 use warp::{filters::BoxedFilter, Reply};
+use sqlx::SqlitePool;
 
-pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
+pub(super) fn make_routes(db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
     .allow_any_origin().allow_methods(&[warp::http::Method::GET, warp::http::Method::POST]);
 
@@ -21,6 +22,7 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
             handlebars.render("tpl_1", &json!({})).unwrap()
         )
     });
+
     // GET /home - get the main front page
     let home = warp::path::end().map(|| {
         let body: String = fs::read_to_string("templates/index.html").unwrap().parse().unwrap();
@@ -40,6 +42,9 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
         )
     });
 
+    // GET /api/pixel - get list of pixels
+    let get_pixel_list = get_pixel_list(db_conn);
+
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -56,8 +61,23 @@ pub(super) fn make_routes() -> BoxedFilter<(impl Reply,)> {
         .or(get_css)
         .or(get_font)
         .or(new_image_page)
+        .or(get_pixel_list)
         .or(home)
         .or(default)
         .boxed()
 }
 
+fn get_pixel_list(db_conn: &mut SqlitePool) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    let db_in = db_conn.clone();
+    warp::path!("api" / "pixel")
+            .and(warp::any())
+            .map( move || {
+                let _db = match db_in.try_acquire(){
+                    Some(db) => db,
+                    None => {
+                        return warp::reply::json(&json!({"status": "fail", "message": "database connection failure"}))
+                    }
+                };
+                warp::reply::json(&json!({"status": "ok", "message": ""}))
+            })
+} 

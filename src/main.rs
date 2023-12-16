@@ -1,6 +1,9 @@
+extern crate sqlx;
+
 mod errors;
 mod cli;
 mod server;
+mod db;
 
 #[tokio::main]
 async fn main() {
@@ -16,6 +19,7 @@ async fn main() {
     };
     
     pretty_env_logger::init();
+    let mut pool = db::get_conn().await.unwrap();
 
-    server::start(([0,0,0,0], args.port)).await;
+    server::start(([0,0,0,0], args.port), &mut pool).await;
 }
