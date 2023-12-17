@@ -2,10 +2,13 @@ use warp::Filter;
 use std::fs;
 use serde_json::json;
 use handlebars::Handlebars;
-use warp::{filters::BoxedFilter, Reply};
+use warp::{filters::BoxedFilter, Reply, Rejection};
 use sqlx::SqlitePool;
+use sqlx::Pool;
+use sqlx::Sqlite;
+use crate::db::queries;
 
-pub(super) fn make_routes(db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)> {
+pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
     .allow_any_origin().allow_methods(&[warp::http::Method::GET, warp::http::Method::POST]);
 
@@ -33,6 +36,7 @@ pub(super) fn make_routes(db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)
         )
     });
 
+    // Get /new - get the page for creating a new pixel image
     let new_image_page = warp::path("new").map(|| {
         let body: String = fs::read_to_string("templates/setuppixel.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
@@ -42,8 +46,11 @@ pub(super) fn make_routes(db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)
         )
     });
 
-    // GET /api/pixel - get list of pixels
-    let get_pixel_list = get_pixel_list(db_conn);
+    // // GET /api/pixel - get list of pixels
+    let get_pixel_list_route = warp::get()
+        .and(warp::path!("api" / "pixel"))
+        .and(db_conn.clone())
+        .and_then(get_pixel_list);
 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
@@ -61,23 +68,27 @@ pub(super) fn make_routes(db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)
         .or(get_css)
         .or(get_font)
         .or(new_image_page)
-        .or(get_pixel_list)
+        .or(get_pixel_list_route)
         .or(home)
         .or(default)
         .boxed()
 }
 
-fn get_pixel_list(db_conn: &mut SqlitePool) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    let db_in = db_conn.clone();
-    warp::path!("api" / "pixel")
-            .and(warp::any())
-            .map( move || {
-                let _db = match db_in.try_acquire(){
-                    Some(db) => db,
-                    None => {
-                        return warp::reply::json(&json!({"status": "fail", "message": "database connection failure"}))
-                    }
-                };
-                warp::reply::json(&json!({"status": "ok", "message": ""}))
-            })
+async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let rows = match queries::get_pixel_list(&mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    };
+           
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "pixelimages": rows}))
+        )
+    )
 } 

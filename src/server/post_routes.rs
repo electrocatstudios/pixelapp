@@ -3,7 +3,7 @@ use warp::{filters::BoxedFilter, Filter, Reply};
 use serde_json::json;
 use sqlx::SqlitePool;
 
-pub(super) fn make_routes(_db_conn: &mut SqlitePool) -> BoxedFilter<(impl Reply,)> {
+pub(super) async fn make_routes(_db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST routes
     // POST /heartbeat - a POST version of the heartbeat route
     let cors = warp::cors()

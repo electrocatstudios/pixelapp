@@ -1,9 +1,29 @@
-use sqlx::{Pool,Error, migrate::MigrateDatabase};
+use sqlx::{Pool, migrate::MigrateDatabase};
 use sqlx_sqlite::{Sqlite,SqlitePool};
+use warp::filters::BoxedFilter;
+use warp::Filter;
+
+use std::fmt;
+
+
+pub mod models;
+pub mod queries;
 
 const DB_CONN_STRING: &str = "sqlite://pixel.db";
 
-pub async fn get_conn() -> Result<Pool<Sqlite>, Error> {
+pub enum DBError {
+    UnknownError(String)
+}
+
+impl fmt::Display for DBError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DBError::UnknownError(err_str) => write!(f, "UnknownError: {}", err_str),
+        }
+    }
+}
+
+pub async fn get_db_filter() -> Result<BoxedFilter<(Pool<Sqlite>,)>, Box<dyn std::error::Error>> {
     if !Sqlite::database_exists(&DB_CONN_STRING).await.unwrap_or(false) {
         Sqlite::create_database(&DB_CONN_STRING).await.unwrap();
         log::info!("Database created");
@@ -11,10 +31,10 @@ pub async fn get_conn() -> Result<Pool<Sqlite>, Error> {
         log::info!("Database exists, skipping creation");
     }
 
-    let db = SqlitePool::connect(DB_CONN_STRING).await?;
+    let pool = SqlitePool::connect(DB_CONN_STRING).await?;
     
     let res = sqlx::migrate!("./migrations")
-        .run(&db)
+        .run(&pool)
         .await;
 
     match res {
@@ -27,5 +47,5 @@ pub async fn get_conn() -> Result<Pool<Sqlite>, Error> {
         }
     }
 
-    Ok(db)
+    Ok(warp::any().map(move || pool.clone()).boxed())
 }

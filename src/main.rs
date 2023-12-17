@@ -19,7 +19,14 @@ async fn main() {
     };
     
     pretty_env_logger::init();
-    let mut pool = db::get_conn().await.unwrap();
+    let pool = match db::get_db_filter().await {
+        Ok(db_pool) => db_pool,
+        Err(err) => {
+            log::error!("Error connecting to db: {}", err);
+            
+            return;
+        }
+    };
 
-    server::start(([0,0,0,0], args.port), &mut pool).await;
+    server::start(([0,0,0,0], args.port), &mut pool.clone()).await;
 }
