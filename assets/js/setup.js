@@ -37,11 +37,11 @@ function create_picture(){
     // }
 
     var url = '/api/new';
-    // console.log(url);
     $.ajax({
         url: url,
         type: 'POST',
         dataType: 'json',
+        contentType: "application/json; charset=utf-8",
         data: JSON.stringify(data),
         // beforeSend: function (xhr) {
         //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
@@ -51,10 +51,13 @@ function create_picture(){
                 $('#error').html(ret.message);
                 return;
             }
-            window.location.href='/pixel/' + ret.pixelid;
+            // console.log(ret);
+            // TODO: Add in the redirect to the new image
+            // window.location.href='/pixel/' + ret.pixelid;
         },
         error: function(ret){
-            console.log("ERROR while creting new game");
+            $('#error').html("Error creating new pixel");
+            console.log("ERROR while creting new pixel");
             console.log(ret);
         }
     })
@@ -82,7 +85,8 @@ function load_from_file(){
                     $('#errorfileupload').html(ret.message);
                     return;
                 }
-                window.location.href='/pixel/' + ret.pixelid;
+                // TODO: make this work and do redirect
+                // window.location.href='/pixel/' + ret.pixelid;
             },
             error: function(ret){
                 console.log("ERROR while creting new game");

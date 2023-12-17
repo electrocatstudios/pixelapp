@@ -11,3 +11,12 @@ pub struct PixelImage {
     pub pixelwidth: i32,
     pub guid: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PixelImageDesc {
+    pub name: String,
+    pub description: String,
+    pub width: i32,
+    pub height: i32,
+    pub pixelwidth: i32
+}

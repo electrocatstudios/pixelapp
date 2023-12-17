@@ -5,19 +5,20 @@ use warp::Filter;
 
 use std::fmt;
 
-
 pub mod models;
 pub mod queries;
 
 const DB_CONN_STRING: &str = "sqlite://pixel.db";
 
 pub enum DBError {
+    DatabaseError(String),
     UnknownError(String)
 }
 
 impl fmt::Display for DBError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            DBError::DatabaseError(err_str) => write!(f, "DatabaseError: {}", err_str),
             DBError::UnknownError(err_str) => write!(f, "UnknownError: {}", err_str),
         }
     }

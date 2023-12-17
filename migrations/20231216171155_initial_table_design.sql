@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS pixelimage (
     width INT NOT NULL,
     height INT NOT NULL,
     pixelwidth INT NOT NULL,
-    guid VARCHAR
+    guid VARCHAR UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS pixel (

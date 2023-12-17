@@ -1,11 +1,9 @@
-use warp::Filter;
 use std::fs;
 use serde_json::json;
 use handlebars::Handlebars;
-use warp::{filters::BoxedFilter, Reply, Rejection};
-use sqlx::SqlitePool;
-use sqlx::Pool;
-use sqlx::Sqlite;
+use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
+use sqlx::{Sqlite,SqlitePool,Pool};
+
 use crate::db::queries;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
