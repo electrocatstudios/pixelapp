@@ -1,0 +1,202 @@
+<div id='pixel_toolbar'>
+    <div id='toolbar_button_paint' class='toolbar_item toolbar_item_selected' onclick='click_menu_item("paint");'>P</div>
+    <div id='toolbar_button_erase' class='toolbar_item' onclick='click_menu_item("erase");'>E</div>
+    <div id='toolbar_button_move' class='toolbar_item' onclick='click_menu_item("move");'>M</div>
+
+    <div id='toolbar_button_sample' class='toolbar_item' onclick='click_menu_item("sample");'>S</div>
+    <!-- <div id='toolbar_button_view' class='toolbar_item' onclick='click_menu_item("view")'>V</div> -->
+    <div id='toolbar_button_color' class='toolbar_item' onclick='click_menu_item("color")'>
+        <div id='toolbar_color_show'></div>
+    </div>
+    <!--<div id='toolbar_button_zoom_minus' class='toolbar_item' onclick='click_menu_item("zoom_minus")'>-</div> -->
+</div>
+
+<div id='pixel_zoom_buttons'>
+    <div id='toolbar_button_zoom_plus' class='zoom_toolbar_item' onclick='click_menu_item("zoom_plus")'>+</div>
+    <div id='toolbar_button_zoom_minus' class='zoom_toolbar_item' onclick='click_menu_item("zoom_minus")'>-</div>
+</div>
+
+<div id='toolbar_color_picker'>
+    <button id='toolbar_select_button_background' class='toolbar_color_button' onclick='select_layer("background")'>Background</button>
+    <button id='toolbar_select_button_color' class='toolbar_color_button toolbar_color_button_selected' onclick='select_layer("color")'>Color</button>
+    <button id='toolbar_select_button_shader' class='toolbar_color_button' onclick='select_layer("shader")'>Shader</button>
+    <br>
+    <div class='color_bar_selector' id='color_bar_red'></div>
+    <div class='color_bar_selector' id='color_bar_green'></div>
+    <div class='color_bar_selector' id='color_bar_blue'></div>
+    <div class='color_bar_selector' id='color_bar_alpha'></div>
+    <br>
+    <input type='number' class='color_bar_input' id='color_bar_input_red'>
+    <input type='number' class='color_bar_input' id='color_bar_input_green'>
+    <input type='number' class='color_bar_input' id='color_bar_input_blue'>
+    <input type='number' class='color_bar_input' id='color_bar_input_alpha'>
+    <br>
+    <div id='toolbar_color_sample'></div>
+</div>
+
+<div id='toolbar_view_select'>
+    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_grid' onclick='toggle_view_button("grid")'>G</div>
+    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_background' onclick='toggle_view_button("background")'>B</div>
+    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_foreground' onclick='toggle_view_button("foreground")'>F</div>
+    <div class='toolbar_view_button' id='toolbar_view_select_shader' onclick='toggle_view_button("shader")'>S</div>   
+</div>
+
+<style>
+    .toolbar_item{
+        width: 60px;
+        height:60px;
+        background-color:#424242;
+        border-radius: 10px;
+        line-height: 60px;
+        overflow: hidden;
+        text-align: center;
+        /* top:5px; */
+        display:block;
+        transition:all 0.3s ease;
+        margin:5px;
+
+        /*Don't allow text selection*/
+        webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+
+    }
+    .zoom_toolbar_item{
+        display:inline-block;
+        width: 40px;
+        height:40px;
+        background-color:#424242;
+        border-radius: 10px;
+        line-height: 40px;
+        text-align: center;
+        /* top:5px; */
+        /* display:block; */
+        transition:all 0.3s ease;
+        margin:5px;
+
+        /*Don't allow text selection*/
+        webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+    }
+    #pixel_toolbar{
+        position:absolute;
+        left: 200px;
+        top:60px;
+        /* height:400px; */
+        /* width:100px; */
+        border-radius:5px;
+        background-color: #626262;
+        width: 70px;
+    }
+
+    #pixel_zoom_buttons{
+        position:absolute;
+        background-color: #626262;
+        width: 110px;
+        border-radius:0px 0px 10px 10px;
+    }
+
+    .toolbar_item_selected{
+        background-color:#e0e0e0;
+        color: #424242;
+        transition:all 0.2s ease;
+    }
+
+    #toolbar_color_show{
+        width: 40px;
+        height:40px;
+        margin:10px;
+        line-height: normal;
+        /* margin-left:10px; */
+        border-radius: 5px;
+        background-color: #ff0000;
+    }
+    #toolbar_color_picker{
+        width:250px;
+        height: 400px;
+        background-color: #626262;
+        position:absolute;
+        display:none;
+        z-index: 20;
+        padding:20px;
+    }
+    #toolbar_color_picker input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #toolbar_color_picker input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #toolbar_color_picker input[type='number']{
+        -moz-appearance: textfield;
+    }
+    .color_bar_selector{
+        display:inline-block;
+        height:200px;
+        width: 50px;
+        background-color: white;
+        margin-left: 5px;
+        border-radius: 5px;
+        cursor:pointer;
+    }
+    .color_bar_input{
+        display:inline-block;
+        width: 50px;
+        margin-left: 5px;
+        border-radius:5px;
+        padding:0px;
+    }
+    #toolbar_color_sample{
+        display:block;
+        width: 230px;
+        height: 30px;
+        /* background-color: blue; */
+        border-radius:10px;
+        margin-left:5px;
+    }
+    .toolbar_color_button{
+        color:white;
+    }
+    .toolbar_color_button_selected{
+        color:#626262;
+        background-color: white;;
+    }
+    #toolbar_view_select{
+        padding: 5px;
+        background-color: #3a3a3a;
+        width: 40px;
+        position: absolute;
+    }
+    .toolbar_view_button{
+        text-align:center;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        background-color: #626262;
+        border-radius: 5px;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.4s ease;
+    }
+    .toolbar_view_button_selected{
+        background-color:#e0e0e0;
+        color: #424242;
+        transition: all 0.3s ease;
+    }
+    .toolbar_view_button:hover{
+        background-color: #8b8b8b;
+        transition: all 0.3s ease;
+    }
+</style>
+
+<script type='text/javascript' src='/js/toolbar.js'></script>

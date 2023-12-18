@@ -44,6 +44,11 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // GET /pixe/<guid> - get the page for an existing pixel
+    let pixel_page = warp::path!("pixel" / String)
+        .and(db_conn.clone())
+        .and_then(render_pixel_page);
+
     // // GET /api/pixel - get list of pixels
     let get_pixel_list_route = warp::get()
         .and(warp::path!("api" / "pixel"))
@@ -66,10 +71,32 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_css)
         .or(get_font)
         .or(new_image_page)
+        .or(pixel_page)
         .or(get_pixel_list_route)
         .or(home)
         .or(default)
         .boxed()
+}
+
+async fn render_pixel_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let body: String = fs::read_to_string("templates/pixel.html").unwrap().parse().unwrap();
+    let page_json = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(page_json) => page_json,
+        Err(err) => {
+            log::error!("{}", err);
+            return  Err(warp::reject());
+        }
+    };
+    let mut handlebars = Handlebars::new();
+    handlebars.register_template_string("tpl_1", body).unwrap();
+    Ok(
+        Box::new(
+            warp::reply::html(
+                handlebars.render("tpl_1",  &page_json).unwrap()
+            )
+        )
+    )
+   
 }
 
 async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {

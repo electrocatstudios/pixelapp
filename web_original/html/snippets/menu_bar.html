@@ -1,0 +1,158 @@
+<script type='text/javascript' src='/js/menu_bar.js'></script>
+<!-- <script type='text/javascript' src='/js/logged_in.js'></script> -->
+
+<div class="navBar" id="mainNavBar">
+    <a href="https://electrocatstudios.com/">Home</a>
+    <a href="https://electrocatstudios.com/services">Services</a>
+    <a href="https://electrocatstudios.com/blogs">Blog</a>
+    <a href="https://electrocatstudios.com/tutorials">Tutorials</a>
+
+    <a href="/">Games</a>
+    <a href="javascript:void(0);" class="icon" onClick="openDrawerMenu()" style='text-align:center'>&#9776;</a>
+    <!--&#9776; is the code for the 3 line menu button-->
+    <div id='logged_in_col' style='float:right;'>
+        <div id='avatar' onclick='toggle_logout_options()'></div>
+    </div>
+</div>
+<div id='avatar_menu' class='avatar_hidden'>
+    <div id='avatar_login_button' class='avatar_menu_item' onclick="logout()">Logout</div>
+</div>
+<div style='height: 60px; width: 100%;'>
+    <!-- Menu bar spacer -->
+</div>
+
+<style>
+    #avatar{
+        width: 40px;
+        height: 40px;
+        background-color:rgb(153, 147, 147);
+        border-radius: 20px;
+        margin:10px;
+    }
+
+    #avatar_menu{
+        position:absolute;
+        width: 150px;
+        top:60px;
+        overflow:hidden;
+        right: 10px;
+        z-index: 5;
+    }
+    .avatar_menu_item{
+        height: 40px;
+        color: #636363;
+        text-align: center;
+        line-height: 40px;
+        background-color: rgb(248, 248, 248);
+        cursor: pointer;
+    }
+    .avatar_hidden{
+        transition: all 0.3s ease;
+        height: 0px;    
+    }
+    .avatar_shown{
+        transition: all 0.3s ease;
+        height: 40px;
+    }
+
+    .navBar {
+        /* background-color: #5A77FA; */
+        background-color: white;
+        overflow: hidden;
+        /* position: absolute; */
+        min-height: 60px;
+        position: fixed;
+        width: 100vw;
+        z-index: 10;
+        top: 0px;
+        border-bottom: 2px solid #5A77FA;
+        transition: all 0.5s ease;
+    }
+
+    /* Floats each item to the left with padding of 14 & 16 px.
+       Removes the underline with text decoration = none.*/
+    .navBar a {
+        padding-left: 20px;
+        top: 5px;
+        position: relative;
+        margin: auto;
+        font-family: "Gudea", sans-serif;
+        /* list-style: none; */
+        text-decoration: none;
+        color: black;
+        text-align: center;
+        min-width: 100px;
+        height: 50px;
+        margin-right: 10px;
+        float: left;
+        line-height: 50px;
+        border-radius: 20px;
+        cursor: pointer;
+
+        transition: all 0.4s ease;
+
+        /*Original style*/
+        float: left;
+        /* color: white; */
+        /* padding: 14px 16px; */
+        /* text-decoration: none; */
+        /* font-size: 17px; */
+        /* font-family: Tahoma; */
+    }
+
+    /*Background color change during hover state*/
+    .navBar a:hover {
+        background-color: white;
+        color: #5A77FA;
+        transition: all 0.4s ease;
+        background-color: rgba(143, 180, 239, 0.6);
+        transition: all 0.5s ease;
+    }
+
+    /*Hides the menu Icon which will show when the nav needs to be responsive*/
+    .navBar .icon {
+        display: none;
+        /* text-align: center; */
+    }
+
+    /*Set your custom screen width here replacing 700*/
+    @media (max-width: 700px) {
+        #logo_hover{
+            display:none;
+        }
+        
+        /*Ignores the first link (which is Home) in the div and       applies 'display = none' to everything else.   Basically hiding everything but Home*/
+        .navBar a:not(:first-child) {
+            display: none;
+            transition: all 0.5s ease;
+        }
+
+        /*Brings the menu icon into view and floats it to the right*/
+        .navBar a.icon {
+            display: block;
+            float: right;
+            transition: all 0.5s ease;
+        }
+
+        /*The navBar class will be changed to 'navBar responsive' using JS. This chunk of CSS makes the menu icon stay where it is by making the position absolute within it's parent 'right top corner'. Without this, the icon will get kicked around when the items are collapsed and expanded*/
+        .navBar.responsive {
+            position: fixed;
+            transition: all 0.5s ease;
+        }
+
+        .navBar.responsive a.icon {
+            transition: all 0.5s ease;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        /*Removes the originally set float and brings them to view*/
+        .navBar.responsive a {
+            float: none;
+            display: block;
+            text-align: left;
+            transition: all 0.5s ease;
+        }
+    }
+</style>
