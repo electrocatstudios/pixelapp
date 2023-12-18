@@ -112,3 +112,6 @@ dist
 
 # Database stuff
 pixel.db*
+
+
+.DS_Store
