@@ -1,0 +1,225 @@
+<script type='text/javascript' src='/js/menu_bar.js'></script>
+
+<div class="navBar" id="mainNavBar">
+  
+    <a href="javascript:void(0);" class="icon" onClick="openDrawerMenu()" style='text-align:center'>&#9776;</a>
+    <div>Pixel App</div>
+    <!--&#9776; is the code for the 3 line menu button-->
+</div>
+
+<div id='applicationMenu' class="navBar" >
+   
+    <div id='menu_icons'style='color:black'>
+        <a href="javascript:void(0);" class="icon" onClick="openDrawerMenu()" style='display:inline-block;text-align:center'>&#9776;</a>
+        <!-- <span style='display:inline-block; margin-left: 40px;'> -->
+            <span style='float:left;font-size:50%;margin-right:0px'>Pin</span>
+            <a id='pinned_button' href="javascript:void(0);" class="icon" onClick="toggle_pinned()" style='text-align:center;width:50px;min-width:50px;margin:1px;'>&#9744;</a>
+        <!-- </span> -->
+    </div><br>
+    <div style='max-width: 400px;'>
+
+        <button id='tools_button' onclick='load_tools()'  style='float:left'>Tools</button>
+        <button id='details_button' onclick='load_details()' style='float:left'>Details</button>
+        <button id='transforms_button' onclick='load_transforms()' style='float:left'>Transforms</button>
+    </div>
+
+    <div id='tools' style='display:inline-block;max-width:400px'>
+        <div id='pixel_name' style='text-align: left; margin-left: 20px;font-size:100%'></div>
+        <div style='text-align: left;padding:20px;'>
+            <button onclick='save_pixels()'>
+                Save
+            </button>
+            <button onclick='window.location.href="/pixelapp"'>
+                Back
+            </button>
+        </div> 
+
+        <div style='text-align: left; padding:20px;font-size:50%;'>
+            Color: <input id='color_picker' type="color">
+        </div>
+        <div style='text-align: left; margin-left:20px;'>
+            <button id='paint_button' onclick='select_paint()'>Paint</button>
+            <button id='eraser_button' onclick='select_eraser()'>Eraser</button>
+            <button id='sample_button' onclick='select_sample()'>Sample</button>
+        </div>
+        
+        <span id="canvas-out"
+            style="display:inline-block;width:160px; height:120px; margin:0px auto; margin-left:20px; border-width:3px; border-style:solid; border-color:#8f8f8f;background-color:#dfdfdf">
+            <canvas id="canvas_out" width="160" height="120">
+            <p>Your browser does not support the canvas element.</p>
+        </canvas>
+        </span>
+
+        <div style='text-align: left;margin-left:20px;'>
+            <!-- <button onclick='scale(1)'>x1</button> -->
+            <button id='animation_button' onclick='toggle_animation()'>A</button>
+            <button id='scale_2' onclick='scale(2)'>x2</button>
+            <button id='scale_4' onclick='scale(4)'>x4</button>
+            <button id='scale_8' onclick='scale(8)'>x8</button>
+        </div>
+    </div>
+    <br>
+    <div id='details' style='max-width:400px;'>
+        Details:
+        <div style='font-size:100%; max-width:400px;float:left;'>
+            Width: <input type='number' id='width_selector'><br>
+            Height: <input type='number' id='height_selector'><br>
+            <button onclick='update_details()'>Update</button>
+            <br>
+            Background Color: <input id='backgroundcolor' type='color'>
+            <br>
+            Show Background: <input id='background_show' type="checkbox">
+        </div>
+    </div>
+    <div id='transforms' style='max-width:400px;'>
+        <div style='max-width:400px;float:left;'>Transforms</div>
+        <br>
+        <div id='double_pixel_button' style='max-width:400px;float:left;'>
+            <button onclick='show_confirm_pixel()'>Double Pixels</button>
+        </div>
+        <div id='double_pixel_confirm' style='max-width:400px;float:left;'>
+            <input placeholder="New Name" id='double_pixel_name'><br>
+            <button onclick='confirmed_pixel_double()'>Confirm</button>
+            <button onclick='cancel_pixel_double()'>Cancel</button>
+        </div>
+        
+    </div>
+</div>
+
+<div style='height: 60px; width: 100%;'>
+    <!-- Menu bar spacer -->
+   
+</div>
+
+<style>
+    .navBar {
+        /* background-color: #5A77FA; */
+        background-color: white;
+        overflow: hidden;
+        color: black;
+        line-height: 60px;
+
+        min-height: 60px;
+        position: fixed;
+        width: 100vw;
+        z-index: 10;
+        /* top: 0px; */
+        border-bottom: 2px solid #5A77FA;
+        transition: all 0.5s ease;
+    }
+
+    .navBar div{
+        width: 80vw;
+        text-align: center;
+        font-size: 200%;
+        /* padding-left: 40px; */
+    }
+    
+    /* Floats each item to the left with padding of 14 & 16 px.
+       Removes the underline with text decoration = none.*/
+    .navBar a {
+        padding-left: 20px;
+        top: 5px;
+        position: relative;
+        margin: auto;
+        font-family: "Gudea", sans-serif;
+        /* list-style: none; */
+        text-decoration: none;
+        color: black;
+        text-align: center;
+        min-width: 100px;
+        height: 50px;
+        margin-right: 10px;
+        float: left;
+        line-height: 50px;
+        border-radius: 20px;
+        cursor: pointer;
+
+        transition: all 0.4s ease;
+
+        /*Original style*/
+        float: left;
+        /* color: white; */
+        /* padding: 14px 16px; */
+        /* text-decoration: none; */
+        /* font-size: 17px; */
+        /* font-family: Tahoma; */
+    }
+
+    /*Background color change during hover state*/
+    .navBar a:hover {
+        background-color: white;
+        color: #5A77FA;
+        transition: all 0.4s ease;
+        background-color: rgba(143, 180, 239, 0.6);
+        transition: all 0.5s ease;
+    }
+
+    /*Hides the menu Icon which will show when the nav needs to be responsive*/
+    .navBar .icon {
+        display: none;
+        /* text-align: center; */
+    }
+
+    /*Set your custom screen width here replacing 700*/
+    /* @media (max-width: 700px) { */
+        #logo_hover{
+            display:none;
+        }
+        
+        /*Ignores the first link (which is Home) in the div and       applies 'display = none' to everything else.   Basically hiding everything but Home*/
+        .navBar a:not(:first-child) {
+            display: none;
+            transition: all 0.5s ease;
+        }
+
+        /*Brings the menu icon into view and floats it to the right*/
+        .navBar a.icon {
+            display: block;
+            /* float: right; */
+            transition: all 0.5s ease;
+        }
+
+        /*The navBar class will be changed to 'navBar responsive' using JS. This chunk of CSS makes the menu icon stay where it is by making the position absolute within it's parent 'right top corner'. Without this, the icon will get kicked around when the items are collapsed and expanded*/
+        .navBar.responsive {
+            position: fixed;
+            transition: all 0.5s ease;
+        }
+
+        .navBar.responsive a.icon {
+            transition: all 0.5s ease;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        /*Removes the originally set float and brings them to view*/
+        .navBar.responsive a {
+            float: none;
+            display: block;
+            text-align: left;
+            transition: all 0.5s ease;
+        }
+    /* } */
+
+    #applicationMenu{
+        position: absolute;
+        background-color: white;
+        height: 100vh;
+        z-index: 10;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        color: black;
+        border-right: 2px solid #5A77FA;
+    }
+    .applicationMenuClosed{
+        width: 0px;
+        max-width: 400px;
+        transition: all 0.5s ease;
+    }
+    .applicationMenuOpened{
+        width: 90vw;
+        max-width: 400px;
+        transition: all 0.5s ease;
+    }
+</style>

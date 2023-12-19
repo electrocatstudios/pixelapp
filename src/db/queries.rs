@@ -2,9 +2,11 @@ use std::vec;
 use sqlx::Sqlite;
 use sqlx::pool::Pool;
 use serde_json::json;
+use uuid::Uuid; 
+use std::fs;
+
 use crate::db::models::PixelImage;
 use super::{DBError,models::PixelImageDesc};
-use uuid::Uuid; 
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -48,12 +50,16 @@ pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<
             Err(err) => return Err(DBError::UnknownError(err.to_string()))
         };
         
+    let toolbar: String = fs::read_to_string("templates/snippets/toolbar.html").unwrap().parse().unwrap();
+    let menubar: String = fs::read_to_string("templates/snippets/menubar.html").unwrap().parse().unwrap();
     let ret = &json!({
         "name": &pixel.name,
         "width": &pixel.width,
         "height": &pixel.height,
         "pixelwidth": &pixel.pixelwidth,
-        "guid": &pixel.guid
+        "guid": &pixel.guid,
+        "toolbar": &toolbar,
+        "menubar": &menubar
     });
 
     Ok(ret.clone())

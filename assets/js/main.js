@@ -62,11 +62,11 @@ var cur_frame = 0;
 
 $(document).ready(function(){
     // $('#color_picker').val("#1234ff");
-    token = getToken()
-    if(token == null){
-        window.location.href='/login?ret=pixelapp%2f' + window.pixel_id;
-        return;
-    }
+    // token = getToken()
+    // if(token == null){
+    //     window.location.href='/login?ret=pixelapp%2f' + window.pixel_id;
+    //     return;
+    // }
 
     if(window.pixel_name != undefined && window.pixel_name != null && window.pixel_name!=""){
       $('#pixel_name').html(window.pixel_name);
