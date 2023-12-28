@@ -44,7 +44,17 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
-    // GET /pixe/<guid> - get the page for an existing pixel
+    // Get /load
+    let load_image_page = warp::path("load").map(|| {
+        let body: String = fs::read_to_string("templates/saved.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_2", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_2", &json!({})).unwrap()
+        )
+    });
+
+    // GET /pixel/<guid> - get the page for an existing pixel
     let pixel_page = warp::path!("pixel" / String)
         .and(db_conn.clone())
         .and_then(render_pixel_page);
@@ -54,6 +64,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(warp::path!("api" / "pixel"))
         .and(db_conn.clone())
         .and_then(get_pixel_list);
+
+    let get_image_render = warp::path!("img" / String / String)
+        .and(db_conn.clone())
+        .and_then(get_image_rendered);
 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
@@ -71,6 +85,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_css)
         .or(get_font)
         .or(new_image_page)
+        .or(load_image_page)
+        .or(get_image_render)
         .or(pixel_page)
         .or(get_pixel_list_route)
         .or(home)
@@ -80,7 +96,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
 async fn render_pixel_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let body: String = fs::read_to_string("templates/pixel.html").unwrap().parse().unwrap();
-    let page_json = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+    let page_json = match queries::get_pixel_details_as_json(guid, &mut db_pool.clone()).await {
         Ok(page_json) => page_json,
         Err(err) => {
             log::error!("{}", err);
@@ -117,3 +133,37 @@ async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejecti
         )
     )
 } 
+
+async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    // Get pixels and render to image - type of which is defined by image_type
+    if image_type != "png"{
+        // Currently only png supported
+        return Err(warp::reject::not_found())
+    }
+
+    let _pixels = match queries::get_pixels_for_image(pixel.id, 1, 1, &mut db_pool.clone()).await {
+        Ok(pixels) => pixels,
+        Err(err) => {
+            log::error!("Error finding pixels {}", err);
+            return Err(warp::reject::not_found())
+        }
+    };
+
+    // TODO: Create new image, render the pixels, save as temp file, send file
+
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": ""}))
+        )
+    )
+}
