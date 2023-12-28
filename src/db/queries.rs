@@ -6,7 +6,7 @@ use uuid::Uuid;
 use std::fs;
 
 use crate::db::models::PixelImage;
-use super::{DBError,models::PixelImageDesc};
+use super::{DBError,models::{PixelImageDesc, PixelPixel}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -40,15 +40,11 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
             }
 }
 
-pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
-    let pixel = match sqlx::query_as::<_,PixelImage>(
-            "SELECT * FROM pixelimage WHERE guid=$1"
-        )
-        .bind(guid)
-        .fetch_one(&*pool).await {
-            Ok(pix) => pix,
-            Err(err) => return Err(DBError::UnknownError(err.to_string()))
-        };
+pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
+    let pixel = match get_pixel_details(guid, pool).await {
+        Ok(pix) => pix,
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    };
         
     let toolbar: String = fs::read_to_string("templates/snippets/toolbar.html").unwrap().parse().unwrap();
     let menubar: String = fs::read_to_string("templates/snippets/menubar.html").unwrap().parse().unwrap();
@@ -63,4 +59,30 @@ pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<
     });
 
     Ok(ret.clone())
+}
+
+pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<PixelImage, DBError> {
+    match sqlx::query_as::<_,PixelImage>(
+        "SELECT * FROM pixelimage WHERE guid=$1"
+    )
+    .bind(guid)
+    .fetch_one(&*pool).await {
+        Ok(pix) => Ok(pix),
+        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
+pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
+    let pixels = match sqlx::query_as::<_,PixelPixel>(
+        "SELECT * FROM pixel WHERE image_id=$1 AND layer=$2 AND frame=$3"
+        )
+        .bind(image_id)
+        .bind(layer)
+        .bind(frame)
+        .fetch_all(&*pool).await {
+            Ok(pix) => pix,
+            Err(err) => return Err(DBError::UnknownError(err.to_string()))
+        };
+    
+    Ok(pixels)
 }
