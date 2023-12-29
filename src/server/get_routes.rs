@@ -4,6 +4,9 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Sqlite,SqlitePool,Pool};
 
+use image::{RgbaImage,Rgba};
+use image::io::Reader as ImageReader;
+
 use crate::db::queries;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
@@ -68,6 +71,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_image_render = warp::path!("img" / String / String)
         .and(db_conn.clone())
         .and_then(get_image_rendered);
+        // .and_then(|pathname| async move {warp::fs::file(pathname)});
 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
@@ -150,7 +154,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
         return Err(warp::reject::not_found())
     }
 
-    let _pixels = match queries::get_pixels_for_image(pixel.id, 1, 1, &mut db_pool.clone()).await {
+    let pixels = match queries::get_pixels_for_image(pixel.id, 1, 1, &mut db_pool.clone()).await {
         Ok(pixels) => pixels,
         Err(err) => {
             log::error!("Error finding pixels {}", err);
@@ -158,12 +162,66 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
         }
     };
 
-    // TODO: Create new image, render the pixels, save as temp file, send file
+    if pixels.len() == 0 {
+        log::error!("No pixels found for image");
+        let img: RgbaImage = match ImageReader::open("./assets/img/notfound.png") {
+            Ok(img) => match img.decode() {
+                Ok(img) => img.into_rgba8(),
+                Err(err)  => {
+                    log::error!("Error decoding notfound image {}", err);
+                    return Err(warp::reject::not_found())
+                }
+            },
+            Err(err) => {
+                log::error!("Error opening notfound image {}", err);
+                return Err(warp::reject::not_found())
+            }
+        };
+        let mut bytes: Vec<u8> = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageOutputFormat::Png).unwrap();
+        return Ok(
+            Box::new(
+                warp::reply::with_header(bytes, "Content-Type", "image/png")
+            )
+        )
+    }
 
+    // TODO: Include last updated time in filename
+    let pathname = "images/".to_owned() + pixel.guid.clone().as_str() + ".png";
+    
+    // TODO: Check if file already exists
 
+    // TODO: Check last updated time and see if the file has changed and then re-render if necessary
+
+    // Create new image, render the pixels, save as temp file
+    let mut image: RgbaImage = RgbaImage::new(pixel.width as u32, pixel.height as u32);
+    for pix in pixels.iter() {
+        for x in 0..pixel.pixelwidth {
+            for y in 0..pixel.pixelwidth {
+                let offset_x = pix.x * pixel.pixelwidth;
+                let offset_y = pix.y * pixel.pixelwidth;
+                image.put_pixel( 
+                    (offset_x + x) as u32, 
+                    (offset_y + y) as u32, 
+                    Rgba([pix.r as u8, pix.g as u8, pix.b as u8, pix.alpha as u8])
+                );
+            }
+        }
+    }
+
+    match image.save(&pathname) {
+        Ok(_) => {},
+        Err(err) => {
+            log::error!("Error saving image {}", err);
+            return Err(warp::reject::not_found())
+        }
+    }
+
+    let mut bytes: Vec<u8> = Vec::new();
+    image.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageOutputFormat::Png).unwrap();
     Ok(
         Box::new(
-            warp::reply::json(&json!({"status": "ok", "message": ""}))
+            warp::reply::with_header(bytes, "Content-Type", "image/png")
         )
     )
 }
