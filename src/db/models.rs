@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::vec;
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct PixelImage {
@@ -33,5 +34,23 @@ pub struct PixelPixel {
     pub b: i32,
     pub alpha: f64,
     pub layer: i32,
+    pub frame: i32,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SavePixel {
+    pub guid: String,
+    pub pixels: vec::Vec::<IncomingPixel>,
+    pub shaders: vec::Vec::<IncomingPixel>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct IncomingPixel {
+    pub x: i32,
+    pub y: i32,
+    pub r: i32,
+    pub g: i32,
+    pub b: i32,
+    pub alpha: f64,
     pub frame: i32,
 }

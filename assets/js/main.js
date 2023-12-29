@@ -218,15 +218,16 @@ function save_pixels(){
         pixels: pixels,
         shaders: shaders
     }
-    var url = "/api/pixelapp/save";
+    var url = "/api/save";
     $.ajax({
         url: url,
         type: 'POST',
         dataType: 'json',
+        contentType: "application/json; charset=utf-8",
         data: JSON.stringify(data),
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Bearer " + token);
-        },
+        // beforeSend: function (xhr) {
+        //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+        // },
         success: function(ret){
             if(ret.status != 'ok'){
                 $('#error').html(ret.message);

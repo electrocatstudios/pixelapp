@@ -6,7 +6,7 @@ use uuid::Uuid;
 use std::fs;
 
 use crate::db::models::PixelImage;
-use super::{DBError,models::{PixelImageDesc, PixelPixel}};
+use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -86,3 +86,60 @@ pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &
     
     Ok(pixels)
 }
+
+async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    log::info!("Saving image pixels");
+    match sqlx::query(
+        "INSERT INTO pixel(image_id, x, y, \
+        r, g, b, alpha, layer, frame) VALUES \
+        ($1, $2, $3, $4, $5, $6, $7, 1, $8)"
+        )
+        .bind(&image_id)
+        .bind(&incoming.x)
+        .bind(&incoming.y)
+        .bind(&incoming.r)
+        .bind(&incoming.g)
+        .bind(&incoming.b)
+        .bind(&incoming.alpha)
+        .bind(&incoming.frame)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(DBError::DatabaseError(err.to_string()))
+        }
+}
+
+async fn update_pixel_for_image(pixel_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "UPDATE pixel SET r=$1, g=$2, b=$3, \
+        alpha=$4 WHERE id=$5"
+        )
+        .bind(&incoming.r)
+        .bind(&incoming.g)
+        .bind(&incoming.b)
+        .bind(&incoming.alpha)
+        .bind(&pixel_id)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(DBError::DatabaseError(err.to_string()))
+        }
+}
+
+pub async fn save_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    log::info!("Saving image {}:{} - {},{},{}", incoming.x, incoming.y, incoming.r, incoming.g, incoming.b);
+
+    let pixel = match sqlx::query_as::<_, PixelPixel>(
+            "SELECT * FROM pixel WHERE image_id=$1 AND frame=$2"
+        )
+        .bind(image_id)
+        .bind(incoming.frame)
+        .fetch_one(&*pool).await {
+            Ok(pix) => pix,
+            Err(_) => {
+                log::info!("Pixel being created");
+                // Pixel doesn't exist so create it
+                return create_pixel_for_image(image_id, incoming, &mut pool.clone()).await;
+            }
+        };
+    log::info!("Found pixel so updating");
+    update_pixel_for_image(pixel.id, incoming, &mut pool.clone()).await
+} 

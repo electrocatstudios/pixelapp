@@ -154,7 +154,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
         return Err(warp::reject::not_found())
     }
 
-    let pixels = match queries::get_pixels_for_image(pixel.id, 1, 1, &mut db_pool.clone()).await {
+    let pixels = match queries::get_pixels_for_image(pixel.id, 0, 1, &mut db_pool.clone()).await {
         Ok(pixels) => pixels,
         Err(err) => {
             log::error!("Error finding pixels {}", err);
