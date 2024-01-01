@@ -1,5 +1,5 @@
 use std::vec;
-use sqlx::Sqlite;
+use sqlx::{Sqlite, Row};
 use sqlx::pool::Pool;
 use serde_json::json;
 use uuid::Uuid; 
@@ -202,4 +202,27 @@ pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> 
     }
 
     Ok(())
+}
+
+pub async fn get_frame_count(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
+    match sqlx::query(
+        "SELECT MAX(frame) as frame FROM pixel \
+            WHERE image_id=$1"
+    )
+    .bind(image_id)
+    .fetch_one(&*pool).await {
+        Ok(row) => {
+            let val: i32 = match row.try_get(0){
+                Ok(val) => val,
+                Err(_) => {
+                    return Err(DBError::DatabaseError("Failed to find column while search for frame count".to_string()))
+                } 
+            };
+            Ok(val+1)
+        },
+        Err(err) => {
+            log::error!("{}", err.to_string());
+            Err(DBError::DatabaseError(err.to_string()))
+        }
+    }
 }

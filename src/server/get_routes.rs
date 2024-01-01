@@ -58,6 +58,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // GET /render/<guid>
+    let load_render_page = warp::path!("render" / String).map(|guid: String| {
+        let body: String = fs::read_to_string("templates/render.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_3", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_3", &json!({"guid":guid})).unwrap()
+        )
+    });
+
     // GET /pixel/<guid> - get the page for an existing pixel
     let pixel_page = warp::path!("pixel" / String)
         .and(db_conn.clone())
@@ -74,10 +84,20 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_image_rendered);
 
+    // GET /render/<guid> - get the output sprite sheet
+    let get_rendered_spritsheet = warp::path!("img" / "spritesheet" / String)
+        .and(db_conn.clone())
+        .and_then(get_rendered_spritesheet_impl);
+
     // GET /api/<guid> - return list of pixels for image
     let get_image_pixel_list = warp::path!("api" / String)
         .and(db_conn.clone())
         .and_then(get_image_pixel_list);
+
+    // GET /api/details/<guid> - get information about pixel (width, height etc)
+    let get_pixel_details = warp::path!("api" / "details" / String)
+        .and(db_conn.clone())
+        .and_then(get_pixel_details_impl);
 
     // GET /api/shader/<guid>
     let get_image_shader_list = warp::path!("api" / "shader" / String)
@@ -102,10 +122,13 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(new_image_page)
         .or(load_image_page)
         .or(get_image_render)
+        .or(load_render_page)
         .or(pixel_page)
         .or(get_pixel_list_route)
+        .or(get_pixel_details)
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
+        .or(get_rendered_spritsheet)
         .or(home)
         .or(default)
         .boxed()
@@ -150,6 +173,32 @@ async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejecti
         )
     )
 } 
+
+async fn get_pixel_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+    Ok(
+        Box::new(
+            warp::reply::json(&json!(
+                {
+                    "status": "ok", 
+                    "message": "", 
+                    "width": pixel.width, 
+                    "height": pixel.height, 
+                    "pixel_size": pixel.pixelwidth, 
+                    "name": pixel.name, 
+                    "description": pixel.description
+                }
+            ))
+        )
+    )
+}
 
 async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
@@ -234,6 +283,78 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
         }
     }
 
+    match image.save(&pathname) {
+        Ok(_) => {},
+        Err(err) => {
+            log::error!("Error saving image {}", err);
+            return Err(warp::reject::not_found())
+        }
+    }
+
+    let mut bytes: Vec<u8> = Vec::new();
+    image.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageOutputFormat::Png).unwrap();
+    Ok(
+        Box::new(
+            warp::reply::with_header(bytes, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_rendered_spritesheet_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+    // log::info!("Rendering Image {}", guid);
+    let frame_count = match queries::get_frame_count(pixel.id, &mut db_pool.clone()).await {
+        Ok(count) => count,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+    // log::info!("We have found {} frames", frame_count);
+
+    let pathname: String = "spritesheets/".to_owned() + pixel.guid.clone().as_str() + ".png";
+    let mut image: RgbaImage = RgbaImage::new( (pixel.width * frame_count) as u32, pixel.height as u32);
+    
+    for frame in 0..frame_count {
+        let pixels = match queries::get_pixels_for_image(pixel.id, frame, 1, &mut db_pool.clone()).await {
+            Ok(pixels) => pixels,
+            Err(err) => {
+                log::error!("Error finding pixels {}", err);
+                return Err(warp::reject::not_found())
+            }
+        };
+
+        for pix in pixels.iter() {
+        
+            for x in 0..pixel.pixelwidth {
+                for y in 0..pixel.pixelwidth {
+                    let offset_x = pix.x * pixel.pixelwidth;
+                    let offset_y = pix.y * pixel.pixelwidth;
+                    let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
+                    let nxt_x = (offset_x + x + (frame * pixel.width)) as u32;
+                    let nxt_y = (offset_y + y) as u32;
+                    if nxt_x < image.width() || nxt_y < image.height() {
+                        image.put_pixel( 
+                            nxt_x as u32, 
+                            nxt_y as u32, 
+                            color
+                        );
+                    } else {
+                        log::debug!("Index {}, {} is out of bounds for the image", nxt_x, nxt_y);
+                    }
+                }
+            }
+        }
+    }
+    
     match image.save(&pathname) {
         Ok(_) => {},
         Err(err) => {
