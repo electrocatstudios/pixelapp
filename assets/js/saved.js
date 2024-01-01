@@ -71,7 +71,9 @@ function cancle_confirmation(pid){
     $('#confirm_delete_'+ pid).hide();
 }
 function delete_pixel(pid){
-    var url = "/api/pixel/" + pid;
+    var url = "/api/" + pid;
+    console.log(url);
+
     $.ajax({
         url: url,
         type: 'DELETE',
@@ -86,7 +88,7 @@ function delete_pixel(pid){
                 $('#error').html(ret.message);
                 return;
             }
-    
+            
             window.location.reload();
           
         },

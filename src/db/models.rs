@@ -37,6 +37,19 @@ pub struct PixelPixel {
     pub frame: i32,
 }
 
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct PixelShading {
+    pub id: i32, // By default, using barrel's types::primary() results in i32
+    pub image_id: i32,
+    pub x: i32,
+    pub y: i32,
+    pub r: i32,
+    pub g: i32,
+    pub b: i32,
+    pub alpha: f64,
+    pub frame: i32,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct SavePixel {
     pub guid: String,
@@ -46,6 +59,17 @@ pub struct SavePixel {
 
 #[derive(Serialize, Deserialize)]
 pub struct IncomingPixel {
+    pub x: i32,
+    pub y: i32,
+    pub r: i32,
+    pub g: i32,
+    pub b: i32,
+    pub alpha: f64,
+    pub frame: i32,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct IncomingShader {
     pub x: i32,
     pub y: i32,
     pub r: i32,

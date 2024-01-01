@@ -1,6 +1,6 @@
 -- Add migration script here
 CREATE TABLE IF NOT EXISTS pixelimage (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR NOT NULL,
     description VARCHAR,
     owner_id INT,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS pixelimage (
 );
 
 CREATE TABLE IF NOT EXISTS pixel (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     image_id INT NOT NULL,
     x INT NOT NULL,
     y INT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS pixel (
 );
 
 CREATE TABLE IF NOT EXISTS shading (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     image_id INT NOT NULL,
     x INT NOT NULL,
     y INT NOT NULL,

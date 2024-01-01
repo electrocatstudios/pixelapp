@@ -6,7 +6,7 @@ use uuid::Uuid;
 use std::fs;
 
 use crate::db::models::PixelImage;
-use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel}};
+use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -87,6 +87,33 @@ pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &
     Ok(pixels)
 }
 
+pub async fn get_all_pixels_for_image(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
+    let pixels = match sqlx::query_as::<_,PixelPixel>(
+        "SELECT * FROM pixel WHERE image_id=$1"
+        )
+        .bind(image_id)
+        .fetch_all(&*pool).await {
+            Ok(pix) => pix,
+            Err(err) => return Err(DBError::UnknownError(err.to_string()))
+        };
+    // TODO: Put in logging to check how many results there are.....
+    log::info!("Found {} results", pixels.len());
+    Ok(pixels)
+}
+
+pub async fn get_all_shaders_for_image(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelShading>, DBError> {
+    let pixels = match sqlx::query_as::<_,PixelShading>(
+        "SELECT * FROM shading WHERE image_id=$1"
+        )
+        .bind(image_id)
+        .fetch_all(&*pool).await {
+            Ok(pix) => pix,
+            Err(err) => return Err(DBError::UnknownError(err.to_string()))
+        };
+
+    Ok(pixels)
+}
+
 async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     log::info!("Saving image pixels");
     match sqlx::query(
@@ -128,18 +155,51 @@ pub async fn save_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool:
     log::info!("Saving image {}:{} - {},{},{}", incoming.x, incoming.y, incoming.r, incoming.g, incoming.b);
 
     let pixel = match sqlx::query_as::<_, PixelPixel>(
-            "SELECT * FROM pixel WHERE image_id=$1 AND frame=$2"
+            "SELECT * FROM pixel WHERE image_id=$1 AND frame=$2 AND x=$3 AND y=$4"
         )
         .bind(image_id)
         .bind(incoming.frame)
+        .bind(incoming.x)
+        .bind(incoming.y)
         .fetch_one(&*pool).await {
             Ok(pix) => pix,
             Err(_) => {
-                log::info!("Pixel being created");
+                log::debug!("Pixel being created");
                 // Pixel doesn't exist so create it
                 return create_pixel_for_image(image_id, incoming, &mut pool.clone()).await;
             }
         };
-    log::info!("Found pixel so updating");
+    log::debug!("Found pixel so updating");
     update_pixel_for_image(pixel.id, incoming, &mut pool.clone()).await
 } 
+
+pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "DELETE FROM pixel WHERE image_id=$1"
+        )
+        .bind(image_id)
+        .execute(&*pool).await {
+            Ok(_) => {},
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        }
+
+    match sqlx::query(
+        "DELETE FROM pixel WHERE image_id=$1"
+        )
+        .bind(image_id)
+        .execute(&*pool).await {
+            Ok(_) => {},
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        }
+           
+    match sqlx::query(
+        "DELETE FROM pixelimage WHERE id=$1"
+    )
+    .bind(image_id)
+    .execute(&*pool).await {
+        Ok(_) => {},
+        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    }
+
+    Ok(())
+}

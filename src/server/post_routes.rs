@@ -27,7 +27,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(warp::path!("api" / "new"))
         .and(json_body_new_pixel())
         .and(db_conn.clone())
-        .and_then(create_new_pixel);
+        .and_then(create_new_pixel_impl);
 
     // POST /api/save - save pixel data for image
     let save_pixels = warp::post()
@@ -55,7 +55,7 @@ fn json_body_save_pixel() -> impl Filter<Extract = (SavePixel,), Error = warp::R
 }
 
 // Create the new pixel from the components
-async fn create_new_pixel(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pix_id = match queries::create_new_pixel(pixel, &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(err) => {

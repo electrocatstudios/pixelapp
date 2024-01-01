@@ -7,7 +7,8 @@ use sqlx::{Sqlite,SqlitePool,Pool};
 use image::{RgbaImage,Rgba};
 use image::io::Reader as ImageReader;
 
-use crate::db::queries;
+use crate::db::models::PixelShading;
+use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
@@ -62,16 +63,26 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(render_pixel_page);
 
-    // // GET /api/pixel - get list of pixels
+    // GET /api/pixel - get list of pixels
     let get_pixel_list_route = warp::get()
         .and(warp::path!("api" / "pixel"))
         .and(db_conn.clone())
         .and_then(get_pixel_list);
 
+    // GET /api/<guid>/<type> - return the image rendered as an image of <type>
     let get_image_render = warp::path!("img" / String / String)
         .and(db_conn.clone())
         .and_then(get_image_rendered);
-        // .and_then(|pathname| async move {warp::fs::file(pathname)});
+
+    // GET /api/<guid> - return list of pixels for image
+    let get_image_pixel_list = warp::path!("api" / String)
+        .and(db_conn.clone())
+        .and_then(get_image_pixel_list);
+
+    // GET /api/shader/<guid>
+    let get_image_shader_list = warp::path!("api" / "shader" / String)
+        .and(db_conn.clone())
+        .and_then(get_image_shader_list);
 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
@@ -80,7 +91,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     // GET /font/<file> - get named font file
     let get_font = warp::path("font").and(warp::fs::dir("./assets/fonts/"));
     // GET /img/<file> - get named img file
-    let get_img = warp::path("img").and(warp::fs::dir("./assets/fonts/"));
+    let get_img = warp::path("img").and(warp::fs::dir("./assets/img/"));
     
 
     heartbeat 
@@ -93,6 +104,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_render)
         .or(pixel_page)
         .or(get_pixel_list_route)
+        .or(get_image_pixel_list)
+        .or(get_image_shader_list)
         .or(home)
         .or(default)
         .boxed()
@@ -139,7 +152,7 @@ async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejecti
 } 
 
 async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+    let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(_) => {
             return Err(
@@ -147,6 +160,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
             )
         }
     };
+    log::info!("For guid {} we found image with id {}", guid, pixel.id);
 
     // Get pixels and render to image - type of which is defined by image_type
     if image_type != "png"{
@@ -161,6 +175,8 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
             return Err(warp::reject::not_found())
         }
     };
+
+    log::info!("Found {} pixels during render", pixels.len());
 
     if pixels.len() == 0 {
         log::error!("No pixels found for image");
@@ -196,15 +212,24 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     // Create new image, render the pixels, save as temp file
     let mut image: RgbaImage = RgbaImage::new(pixel.width as u32, pixel.height as u32);
     for pix in pixels.iter() {
+        
         for x in 0..pixel.pixelwidth {
             for y in 0..pixel.pixelwidth {
                 let offset_x = pix.x * pixel.pixelwidth;
                 let offset_y = pix.y * pixel.pixelwidth;
-                image.put_pixel( 
-                    (offset_x + x) as u32, 
-                    (offset_y + y) as u32, 
-                    Rgba([pix.r as u8, pix.g as u8, pix.b as u8, pix.alpha as u8])
-                );
+                let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
+                let nxt_x = (offset_x + x) as u32;
+                let nxt_y = (offset_y + y) as u32;
+                if nxt_x < image.width() || nxt_y < image.height() {
+                    image.put_pixel( 
+                        nxt_x as u32, 
+                        nxt_y as u32, 
+                        color
+                    );
+                } else {
+                    log::debug!("Index {}, {} is out of bounds for the image", nxt_x, nxt_y);
+                }
+                
             }
         }
     }
@@ -222,6 +247,89 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     Ok(
         Box::new(
             warp::reply::with_header(bytes, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_image_pixel_list(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    let ret_vec: Vec::<PixelPixel> = match queries::get_all_pixels_for_image(pixel.id, &mut db_pool.clone()).await {
+        Ok(p) => p,
+        Err(err) => {
+            return  Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "ok", "message": err.to_string(), "pixels": Vec::<IncomingPixel>::new()}))
+                )
+            )
+        }
+    };
+    log::info!("get_image_pixel_list num results {}", ret_vec.len());
+
+    let mut pixels_out: Vec::<IncomingPixel> = Vec::new();
+    for p in ret_vec {
+        pixels_out.push(IncomingPixel{
+            x: p.x,
+            y: p.y,
+            r: p.r,
+            g: p.g,
+            b: p.b,
+            alpha: p.alpha,
+            frame: p.frame
+        });
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "pixels": pixels_out}))
+        )
+    )
+} 
+
+async fn get_image_shader_list(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    let ret_vec: Vec::<PixelShading> = match queries::get_all_shaders_for_image(pixel.id, &mut db_pool.clone()).await {
+        Ok(p) => p,
+        Err(err) => {
+            return  Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "ok", "message": err.to_string(), "pixels": Vec::<IncomingPixel>::new()}))
+                )
+            )
+        }
+    };
+
+    let mut pixels_out: Vec::<IncomingShader> = Vec::new();
+    for p in ret_vec {
+        pixels_out.push(IncomingShader{
+            x: p.x,
+            y: p.y,
+            r: p.r,
+            g: p.g,
+            b: p.b,
+            alpha: p.alpha,
+            frame: p.frame
+        });
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "shaders": pixels_out}))
         )
     )
 }

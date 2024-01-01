@@ -51,9 +51,7 @@ function create_picture(){
                 $('#error').html(ret.message);
                 return;
             }
-            // console.log(ret);
-            // TODO: Add in the redirect to the new image
-            // window.location.href='/pixel/' + ret.pixelid;
+            window.location.href='/pixel/' + ret.pixelid;
         },
         error: function(ret){
             $('#error').html("Error creating new pixel");

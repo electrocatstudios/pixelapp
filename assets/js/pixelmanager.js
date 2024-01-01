@@ -42,14 +42,14 @@ function PixelManagerLoadData(pixel_id){
         }
     }
 
-    var url = "/api/pixelapp/" + pixel_id;
+    var url = "/api/" + pixel_id;
     $.ajax({
       url: url,
       type: 'GET',
       dataType: 'json',
-      beforeSend: function (xhr) {
-          xhr.setRequestHeader ("Authorization", "Bearer " + token);
-      },
+    //   beforeSend: function (xhr) {
+    //       xhr.setRequestHeader ("Authorization", "Bearer " + token);
+    //   },
       success: function(ret){
         // console.log(ret)
 ;
@@ -58,6 +58,7 @@ function PixelManagerLoadData(pixel_id){
             $('#error').html(ret.message);
             return;
         }
+        console.log(ret);
         
         let _box_width = BOX_WIDTH * TOOL_MANAGER.scale;
         
@@ -87,14 +88,14 @@ function PixelManagerLoadData(pixel_id){
       }
     });
 
-    let shader_url = '/api/pixelapp/shader/' + pixel_id;
+    let shader_url = '/api/shader/' + pixel_id;
     $.ajax({
         url: shader_url,
         type: 'GET',
         dataType: 'json',
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Bearer " + token);
-        },
+        // beforeSend: function (xhr) {
+        //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+        // },
         success: function(ret){
           if(ret.status != "ok"){
               // console.log(ret.message);
