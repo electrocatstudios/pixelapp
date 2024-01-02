@@ -9,6 +9,7 @@ use image::io::Reader as ImageReader;
 
 use crate::db::models::PixelShading;
 use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
+use crate::utils::color_to_hex_string;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
@@ -79,11 +80,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_pixel_list);
 
-    // GET /api/<guid>/<type> - return the image rendered as an image of <type>
+    // GET /img/<guid>/<type> - return the image rendered as an image of <type>
     let get_image_render = warp::path!("img" / String / String)
         .and(db_conn.clone())
         .and_then(get_image_rendered);
 
+    // GET /img/render/<guid>/<frame>/<direction>/<angle>/<flip>
+    let get_image_render_single = warp::path!("img" / "render" / String / u32 / String / u32 / bool)
+        .and(db_conn.clone())
+        .and_then(get_image_render_single_impl);
+    
     // GET /render/<guid> - get the output sprite sheet
     let get_rendered_spritsheet = warp::path!("img" / "spritesheet" / String)
         .and(db_conn.clone())
@@ -104,6 +110,11 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_image_shader_list);
 
+    // GET /api/info/<guid> - fetch information about rendering frames
+    let get_render_info = warp::path!("api" / "info" / String)
+        .and(db_conn.clone())
+        .and_then(get_render_info_impl);
+
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -122,6 +133,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(new_image_page)
         .or(load_image_page)
         .or(get_image_render)
+        .or(get_image_render_single)
         .or(load_render_page)
         .or(pixel_page)
         .or(get_pixel_list_route)
@@ -129,6 +141,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
         .or(get_rendered_spritsheet)
+        .or(get_render_info)
         .or(home)
         .or(default)
         .boxed()
@@ -451,6 +464,150 @@ async fn get_image_shader_list(guid: String, db_pool: Pool<Sqlite>) -> Result<Bo
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": "", "shaders": pixels_out}))
+        )
+    )
+}
+
+async fn get_render_info_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    // framecount
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+    let frame_count = match queries::get_frame_count(pixel.id, &mut db_pool.clone()).await {
+        Ok(count) => count,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    // colors 
+    // color_to_hex_string
+    let mut colors_out: Vec::<String> = Vec::new();
+    for frame in 0..frame_count {
+        let pixels = match queries::get_pixels_for_image(pixel.id, frame, 1, &mut db_pool.clone()).await {
+            Ok(pixels) => pixels,
+            Err(err) => {
+                log::error!("Error finding pixels {}", err);
+                return Err(warp::reject::not_found())
+            }
+        };
+        for p in pixels.iter() {
+            let nxt = color_to_hex_string(p.r as u8, p.g as u8, p.b as u8);
+            if !colors_out.iter().any(|e| e == &nxt) {
+                colors_out.push(nxt.clone());
+            }
+        }
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "framecount": frame_count, "colors": colors_out}))
+        )
+    )
+}
+
+// /img/render/<guid>/<frame>/<direction>/<angle>/<flip>
+async fn get_image_render_single_impl(guid: String, frame: u32, _direction: String, _angle: u32, flip: bool, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+    // log::info!("For guid {} we found image with id {}", guid, pixel.id);
+
+    let pixels = match queries::get_pixels_for_image(pixel.id, frame as i32, 1, &mut db_pool.clone()).await {
+        Ok(pixels) => pixels,
+        Err(err) => {
+            log::error!("Error finding pixels {}", err);
+            return Err(warp::reject::not_found())
+        }
+    };
+
+    log::info!("Found {} pixels during render", pixels.len());
+
+    if pixels.len() == 0 {
+        log::error!("No pixels found for image");
+        let img: RgbaImage = match ImageReader::open("./assets/img/notfound.png") {
+            Ok(img) => match img.decode() {
+                Ok(img) => img.into_rgba8(),
+                Err(err)  => {
+                    log::error!("Error decoding notfound image {}", err);
+                    return Err(warp::reject::not_found())
+                }
+            },
+            Err(err) => {
+                log::error!("Error opening notfound image {}", err);
+                return Err(warp::reject::not_found())
+            }
+        };
+        let mut bytes: Vec<u8> = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageOutputFormat::Png).unwrap();
+        return Ok(
+            Box::new(
+                warp::reply::with_header(bytes, "Content-Type", "image/png")
+            )
+        )
+    }
+
+    // TODO: Include last updated time in filename
+    let pathname = "images/".to_owned() + pixel.guid.clone().as_str() + ".png";
+    
+    // TODO: Check if file already exists
+
+    // TODO: Check last updated time and see if the file has changed and then re-render if necessary
+
+    // Create new image, render the pixels, save as temp file
+    let mut image: RgbaImage = RgbaImage::new(pixel.width as u32, pixel.height as u32);
+    for pix in pixels.iter() {
+        
+        for x in 0..pixel.pixelwidth {
+            for y in 0..pixel.pixelwidth {
+                let offset_x = pix.x * pixel.pixelwidth;
+                let offset_y = pix.y * pixel.pixelwidth;
+                let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
+                let nxt_x = if flip {
+                    (pixel.width - offset_x + x) as u32 
+                } else {
+                    (offset_x + x) as u32 
+                };
+                let nxt_y = (offset_y + y) as u32;
+                if nxt_x < image.width() || nxt_y < image.height() {
+                    image.put_pixel( 
+                        nxt_x as u32, 
+                        nxt_y as u32, 
+                        color
+                    );
+                } else {
+                    log::debug!("Index {}, {} is out of bounds for the image", nxt_x, nxt_y);
+                }
+                
+            }
+        }
+    }
+
+    match image.save(&pathname) {
+        Ok(_) => {},
+        Err(err) => {
+            log::error!("Error saving image {}", err);
+            return Err(warp::reject::not_found())
+        }
+    }
+
+    let mut bytes: Vec<u8> = Vec::new();
+    image.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageOutputFormat::Png).unwrap();
+    Ok(
+        Box::new(
+            warp::reply::with_header(bytes, "Content-Type", "image/png")
         )
     )
 }
