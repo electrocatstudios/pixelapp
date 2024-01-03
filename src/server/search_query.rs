@@ -17,7 +17,6 @@ impl SearchQuery {
                 let pairs = search.split("&");
                 for pair in pairs {
                     let p_split: Vec::<&str> = pair.split("=").collect();
-                    println!("p_split = {} - {}", p_split[0], p_split[1]);
                     if p_split.len() != 2 {
                         continue;
                     }
