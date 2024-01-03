@@ -6,6 +6,7 @@ use sqlx_sqlite::SqlitePool;
 mod get_routes;
 mod post_routes;
 mod delete_routes;
+mod search_query;
 
 pub async fn start(addr: impl Into<SocketAddr>, db_conn: &mut BoxedFilter<(SqlitePool,)>) {
     let get_routes = get_routes::make_routes(&mut db_conn.clone()).await;

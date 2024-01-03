@@ -1,6 +1,5 @@
 use std::fs;
 use serde_json::json;
-use serde::Deserialize;
 
 use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
@@ -11,12 +10,8 @@ use image::io::Reader as ImageReader;
 
 use crate::db::models::PixelShading;
 use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
-use crate::utils::color_to_hex_string;
-
-#[derive(Deserialize)]
-pub struct SearchQuery {
-    search: Option<String>,
-}
+use crate::utils::{color_to_hex_string,hex_string_to_color};
+use super::search_query::SearchQuery;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
@@ -99,7 +94,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     
     // GET /render/<guid> - get the output sprite sheet
     let get_rendered_spritesheet = warp::path!("img" / "spritesheet" / String)
-        .and(warp::query())
+        .and(warp::get())
+        .and(warp::query::raw())
         .and(db_conn.clone())
         .and_then(get_rendered_spritesheet_impl);
 
@@ -321,7 +317,8 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     )
 }
 
-async fn get_rendered_spritesheet_impl(guid: String, _query: SearchQuery, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+// _, 
+async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(_) => {
@@ -330,6 +327,10 @@ async fn get_rendered_spritesheet_impl(guid: String, _query: SearchQuery, db_poo
             )
         }
     };
+
+    let query = SearchQuery{search: Some(query_string)}; 
+    let query_subs = query.get_color_subs();
+    
     // log::info!("Rendering Image {}", guid);
     let frame_count = match queries::get_frame_count(pixel.id, &mut db_pool.clone()).await {
         Ok(count) => count,
@@ -359,7 +360,17 @@ async fn get_rendered_spritesheet_impl(guid: String, _query: SearchQuery, db_poo
                 for y in 0..pixel.pixelwidth {
                     let offset_x = pix.x * pixel.pixelwidth;
                     let offset_y = pix.y * pixel.pixelwidth;
-                    let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
+
+                    let col_hex = color_to_hex_string(pix.r as u8, pix.g as u8, pix.b as u8);
+
+                    let color = match query_subs.get(&col_hex) {
+                        Some(new_col) => {
+                            // log::info!("Subbing color: {} -> {}", new_col.clone(), col_hex);
+                            let (r, g, b) = hex_string_to_color(new_col.to_string());
+                            Rgba([r,g,b,(pix.alpha * 255.0) as u8])
+                        },
+                        None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
+                    };
                     let nxt_x = (offset_x + x + (frame * pixel.width)) as u32;
                     let nxt_y = (offset_y + y) as u32;
                     if nxt_x < image.width() || nxt_y < image.height() {
@@ -621,3 +632,4 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
         )
     )
 }
+
