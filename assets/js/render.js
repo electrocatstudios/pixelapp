@@ -97,7 +97,7 @@ function updateFramePreview(){
 }
 
 function getPixelSpriteSheet(){
-    window.location.href='/img/' + window.pixel_id  + "/spritesheet";
+    window.location.href='/img/spritesheet/' + window.pixel_id;
 }
 
 function renderSingleFrame(){
@@ -174,7 +174,7 @@ function getSubColorSpritesheet(){
         }
         el_count += 1;
         if(el_count == number_colors){
-            window.location.href='/img/' + window.pixel_id  + "/spritesheet" + query;
+            window.location.href='/img/spritesheet/' + window.pixel_id + query;
         }
         
     })

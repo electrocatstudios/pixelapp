@@ -1,5 +1,7 @@
 use std::fs;
 use serde_json::json;
+use serde::Deserialize;
+
 use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Sqlite,SqlitePool,Pool};
@@ -10,6 +12,11 @@ use image::io::Reader as ImageReader;
 use crate::db::models::PixelShading;
 use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 use crate::utils::color_to_hex_string;
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    search: Option<String>,
+}
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
@@ -91,7 +98,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and_then(get_image_render_single_impl);
     
     // GET /render/<guid> - get the output sprite sheet
-    let get_rendered_spritsheet = warp::path!("img" / "spritesheet" / String)
+    let get_rendered_spritesheet = warp::path!("img" / "spritesheet" / String)
+        .and(warp::query())
         .and(db_conn.clone())
         .and_then(get_rendered_spritesheet_impl);
 
@@ -140,7 +148,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_pixel_details)
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
-        .or(get_rendered_spritsheet)
+        .or(get_rendered_spritesheet)
         .or(get_render_info)
         .or(home)
         .or(default)
@@ -313,7 +321,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     )
 }
 
-async fn get_rendered_spritesheet_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+async fn get_rendered_spritesheet_impl(guid: String, _query: SearchQuery, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(_) => {
@@ -568,6 +576,8 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
 
     // Create new image, render the pixels, save as temp file
     let mut image: RgbaImage = RgbaImage::new(pixel.width as u32, pixel.height as u32);
+    log::info!("Image dim {}:{}", image.width(), image.height());
+
     for pix in pixels.iter() {
         
         for x in 0..pixel.pixelwidth {
@@ -576,12 +586,12 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
                 let offset_y = pix.y * pixel.pixelwidth;
                 let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
                 let nxt_x = if flip {
-                    (pixel.width - offset_x + x) as u32 
+                    ((image.width() as i32 - 1) - (offset_x + x)) as u32 
                 } else {
                     (offset_x + x) as u32 
                 };
                 let nxt_y = (offset_y + y) as u32;
-                if nxt_x < image.width() || nxt_y < image.height() {
+                if nxt_x < image.width() && nxt_y < image.height() {
                     image.put_pixel( 
                         nxt_x as u32, 
                         nxt_y as u32, 
