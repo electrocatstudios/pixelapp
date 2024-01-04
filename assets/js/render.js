@@ -97,7 +97,12 @@ function updateFramePreview(){
 }
 
 function getPixelSpriteSheet(){
-    window.location.href='/img/spritesheet/' + window.pixel_id;
+    let include_reverse = ($('#include_reverse:checked').length > 0);
+    if(include_reverse){
+        window.location.href='/img/spritesheet/' + window.pixel_id;
+    } else {
+        window.location.href='/img/spritesheet/' + window.pixel_id + "?include_reverse";
+    }
 }
 
 function renderSingleFrame(){
