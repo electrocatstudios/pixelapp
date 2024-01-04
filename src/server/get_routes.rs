@@ -95,7 +95,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     // GET /render/<guid> - get the output sprite sheet
     let get_rendered_spritesheet = warp::path!("img" / "spritesheet" / String)
         .and(warp::get())
-        .and(warp::query::raw())
+        .and(warp::filters::query::raw()
+                .or(warp::any().map(|| String::default()))
+                .unify()
+            )
         .and(db_conn.clone())
         .and_then(get_rendered_spritesheet_impl);
 
@@ -327,8 +330,8 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
             )
         }
     };
-
-    let query = SearchQuery{search: Some(query_string)}; 
+    
+    let query = SearchQuery{search: Some(query_string)};
     let query_subs = query.get_color_subs();
     
     // log::info!("Rendering Image {}", guid);
