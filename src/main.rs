@@ -5,6 +5,7 @@ mod cli;
 mod server;
 mod db;
 mod utils;
+mod image; 
 
 #[tokio::main]
 async fn main() {

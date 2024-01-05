@@ -11,7 +11,9 @@ use image::io::Reader as ImageReader;
 use crate::db::models::PixelShading;
 use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 use crate::utils::{color_to_hex_string,hex_string_to_color};
-use super::search_query::SearchQuery;
+use crate::image::gif;
+
+use super::query_params::{RenderQuery, GifRenderQuery};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
@@ -102,6 +104,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_rendered_spritesheet_impl);
 
+       // GET /render/<guid> - get the output sprite sheet
+    let get_gif_render = warp::path!("img" / "gif" / String)
+       .and(warp::get())
+       .and(warp::filters::query::raw()
+               .or(warp::any().map(|| String::default()))
+               .unify()
+           )
+       .and(db_conn.clone())
+       .and_then(get_gif_render_impl);
+
     // GET /api/<guid> - return list of pixels for image
     let get_image_pixel_list = warp::path!("api" / String)
         .and(db_conn.clone())
@@ -148,6 +160,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
         .or(get_rendered_spritesheet)
+        .or(get_gif_render)
         .or(get_render_info)
         .or(home)
         .or(default)
@@ -331,7 +344,7 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
         }
     };
     
-    let query = SearchQuery{search: Some(query_string)};
+    let query = RenderQuery{query: Some(query_string)};
     let query_subs = query.get_color_subs();
     
     // log::info!("Rendering Image {}", guid);
@@ -636,3 +649,21 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
     )
 }
 
+async fn get_gif_render_impl(guid: String, query_string: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+       
+    let query = GifRenderQuery::new(query_string);
+
+    let bytes: Vec<u8> = match gif::render_gif(guid, query, db_pool).await {
+        Ok(b) => b,
+        Err(err) => {
+            log::error!("Error rendering gif: {}", err);
+            return Err(warp::reject::not_found());
+        }
+    };
+    
+    Ok(
+        Box::new(
+            warp::reply::with_header(bytes, "Content-Type", "image/gif")
+        )
+    )
+}

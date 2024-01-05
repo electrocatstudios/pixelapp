@@ -99,9 +99,18 @@ function updateFramePreview(){
 function getPixelSpriteSheet(){
     let include_reverse = ($('#include_reverse:checked').length > 0);
     if(include_reverse){
-        window.location.href='/img/spritesheet/' + window.pixel_id;
+        window.location.href='/img/spritesheet/' + window.pixel_id + "?render_type=forward";
     } else {
-        window.location.href='/img/spritesheet/' + window.pixel_id + "?include_reverse";
+        window.location.href='/img/spritesheet/' + window.pixel_id + "?render_type=both";
+    }
+}
+
+function getPixelGif() {
+    let include_reverse = ($('#include_reverse:checked').length > 0);
+    if(include_reverse){
+        window.location.href='/img/gif/' + window.pixel_id + "?render_type=forward";
+    } else {
+        window.location.href='/img/gif/' + window.pixel_id + "?render_type=both";
     }
 }
 
