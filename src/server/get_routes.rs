@@ -654,7 +654,7 @@ async fn get_gif_render_impl(guid: String, query_string: String, db_pool: Pool<S
     let query = GifRenderQuery::new(query_string);
 
     let bytes: Vec<u8> = match gif::render_gif(guid, query, db_pool).await {
-        Ok(b) => b,
+        Ok(b) => *b,
         Err(err) => {
             log::error!("Error rendering gif: {}", err);
             return Err(warp::reject::not_found());

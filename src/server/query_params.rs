@@ -41,7 +41,7 @@ pub struct GifRenderQuery {
     render_type: GifRenderType
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum GifRenderType {
     Forward,
     Backward,
