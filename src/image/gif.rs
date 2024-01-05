@@ -34,7 +34,11 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
     encoder.set_repeat(Repeat::Infinite).unwrap();
 
     let frame_order: Vec::<i32> = match query.get_render_type() {
-        GifRenderType::Backward => (frame_count..0).collect(),
+        GifRenderType::Backward => {
+            let mut order: Vec::<i32> = (0..frame_count).collect();
+            order.reverse();
+            order
+        },
         GifRenderType::Forward => (0..frame_count).collect(),
         GifRenderType::Both => {
             // Get the out and return values
