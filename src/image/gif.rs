@@ -48,7 +48,6 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
             first.append(&mut second);
             first
         }
-        GifRenderType::None => (0..frame_count).collect() // Default is forwards
     };
     // log::info!("{:?} -> {:?}", query.get_render_type(), frame_order);
     for frame_counter in frame_order.iter() {
