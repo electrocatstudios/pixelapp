@@ -46,7 +46,6 @@ pub enum GifRenderType {
     Forward,
     Backward,
     Both,
-    None
 }
 
 impl GifRenderQuery {
@@ -58,8 +57,15 @@ impl GifRenderQuery {
             if p_split[0] == "render_type" {
                 match p_split[1] {
                     "forward" => render_type = GifRenderType::Forward,
+                    "forwards" => render_type = GifRenderType::Forward,
+                    "fwd" => render_type = GifRenderType::Forward,
+                    "f" => render_type = GifRenderType::Forward,
                     "backward" => render_type = GifRenderType::Backward,
+                    "backwards" => render_type = GifRenderType::Backward,
+                    "bwd" => render_type = GifRenderType::Backward,
+                    "b" => render_type = GifRenderType::Backward,
                     "both" => render_type = GifRenderType::Both,
+                    "bth" => render_type = GifRenderType::Both,
                     _ => render_type = GifRenderType::Forward
                 }
             }
@@ -69,28 +75,6 @@ impl GifRenderQuery {
             render_type: render_type
         }
     }
-
-    // fn parse(mut self) {
-    //     match self.query {
-    //         Some(search) => {
-    //             // Get every pair of subs and put in hashmap
-    //             let pairs = search.split("&");
-    //             for pair in pairs {
-    //                 let p_split: Vec::<&str> = pair.split("=").collect();
-    //                 if p_split[0] == "render_type" {
-    //                     match p_split[1] {
-    //                         "forward" => self.render_type = GifRenderType::Forward,
-    //                         "backward" => self.render_type = GifRenderType::Backward,
-    //                         "both" => self.render_type = GifRenderType::Both,
-    //                         _ => self.render_type = GifRenderType::Forward
-    //                     }
-    //                 }
-    //             }
-    //         },
-    //         None => {}
-    //     }
-    //     self.parsed = true;
-    // }
 
     pub fn get_render_type(&self) -> GifRenderType {
         self.render_type
