@@ -50,7 +50,7 @@ fn json_body_new_pixel() -> impl Filter<Extract = (PixelImageDesc,), Error = war
 }
 
 fn json_body_save_pixel() -> impl Filter<Extract = (SavePixel,), Error = warp::Rejection> + Clone {
-    warp::body::content_length_limit(1024 * 16)
+    warp::body::content_length_limit(1024 * 1024)
         .and(warp::body::json())
 }
 
