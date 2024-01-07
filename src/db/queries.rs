@@ -182,26 +182,36 @@ pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> 
             Ok(_) => {},
             Err(err) => return Err(DBError::DatabaseError(err.to_string()))
         }
+    
+    match delete_pixels_for_image(image_id, -1, &mut pool.clone()).await{
+        Ok(_) => {},
+        Err(err) => return Err(err)
+    };
 
-    match sqlx::query(
-        "DELETE FROM pixel WHERE image_id=$1"
+    Ok(())
+}
+
+pub async fn delete_pixels_for_image(image_id: i32, frame: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    if frame == -1 {
+        match sqlx::query(
+            "DELETE FROM pixel WHERE id=$1"
         )
         .bind(image_id)
         .execute(&*pool).await {
-            Ok(_) => {},
+            Ok(_) => Ok(()),
             Err(err) => return Err(DBError::DatabaseError(err.to_string()))
         }
-           
-    match sqlx::query(
-        "DELETE FROM pixelimage WHERE id=$1"
-    )
-    .bind(image_id)
-    .execute(&*pool).await {
-        Ok(_) => {},
-        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    } else {
+        match sqlx::query(
+            "DELETE FROM pixel WHERE id=$1 AND frame=$2"
+        )
+        .bind(image_id)
+        .bind(frame)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        }
     }
-
-    Ok(())
 }
 
 pub async fn get_frame_count(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
@@ -225,4 +235,17 @@ pub async fn get_frame_count(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<i
             Err(DBError::DatabaseError(err.to_string()))
         }
     }
+}
+
+pub async fn update_pixelwidth_for_pixel(image_id: i32, pixelwidth: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "UPDATE pixelimage SET \
+            pixelwidth=$1 WHERE id=$2"
+        )
+        .bind(&pixelwidth)
+        .bind(&image_id)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(DBError::DatabaseError(err.to_string()))
+        }
 }
