@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/js/jquery.min.js"></script>
+
+    <link rel='stylesheet' href='/css/pixelapp.css'>
+
+    <title>Pixel App</title>
+
+    <link href='/css/website.css' rel='stylesheet'>
+    <link href='/css/skeleton.css' rel='stylesheet'>
+
+    <script type='text/javascript' src='/js/main.js?tmp=123'></script>
+    <script type='text/javascript' src='/js/drawmanager.js'></script>
+    <script type='text/javascript' src='/js/pixelmanager.js?tmp=123'></script>
+    <script type='text/javascript' src='/js/toolmanager.js'></script>
+    
+    <script type='text/javascript' src='/js/keyHandlerUtils.js'></script>
+    <script type='text/javascript' src='/js/utils.js'></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <script>
+        window.picture_width = {{width}};
+        window.picture_height = {{height}};
+        window.pixel_size = {{pixelwidth}};
+        window.pixel_id = "{{guid}}";
+        window.pixel_name = "{{name}}"
+    </script>
+</head>
+
+<body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>
+    
+    {{{ menubar }}}
+    
+    <div id='error' style='color:red'></div>
+    
+    <div id="canvas-div">
+		<canvas id="canvas"> <!-- width="800" height="400" -->
+			<p>Your browser does not support the canvas element.</p>
+		</canvas>
+	</div>
+    <div class='container' style='text-align: center;'>
+        <div class='row'>
+            <div class='column'>
+                <h5>Frames</h5>
+            </div>
+        </div>
+        <div class='row'>
+            <div id='frame_buttons' class='column'>
+                <button class='frame_button' onclick='load_frame(1)'>1</button>
+                <button class='frame_button' onclick='new_frame()'>+</button>
+            </div>
+        </div>
+    </div>
+
+    {{{ toolbar }}}
+
+</body>
+</html>
