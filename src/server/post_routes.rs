@@ -3,7 +3,7 @@ use warp::{filters::BoxedFilter, Filter, Reply, Rejection};
 use serde_json::json;
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::{queries,models::{PixelImageDesc,SavePixel}};
+use crate::db::{queries,models::{PixelImageDesc,SavePixel, IncomingPixel}};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST routes
@@ -36,9 +36,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(save_pixel_data);
 
+    // POST /api/double/<guid> - double the pixel density in both x and y planes
+    let double_pixels = warp::post()
+        .and(warp::path!("api" / "double" / String))
+        .and(db_conn.clone())
+        .and_then(double_pixel_data);
+
     heartbeat_post
         .or(create_new_pixel)
         .or(save_pixels)
+        .or(double_pixels)
         .or(default)
         .boxed()
 }
@@ -103,6 +110,94 @@ async fn save_pixel_data(save_pixel: SavePixel, db_pool: Pool<Sqlite>) -> Result
 
     // Loop through shaders and save
 
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": ""}))
+        )
+    )
+}
+
+async fn double_pixel_data(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    // Update the pixelwidth
+    if pixel.pixelwidth > 1 {
+        match queries::update_pixelwidth_for_pixel(pixel.id, pixel.pixelwidth/2, &mut db_pool.clone()).await {
+            Ok(_) => {},
+            Err(err) => {
+                log::error!("Error while updating pixelwidth on pixel {}", err.to_string());
+                return Err(
+                    warp::reject::not_found()
+                );
+            }
+        }
+    } else {
+        log::warn!("Trying to double pixel density but already at smallest possible");
+        // We are already at smallest pixel density
+        return Err(warp::reject::not_found());
+    }
+
+    let frame_count = match queries::get_frame_count(pixel.id, &mut db_pool.clone()).await {
+        Ok(count) => count,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    for frame in 0..frame_count {
+        let pixels = match queries::get_pixels_for_image(pixel.id, frame, 1, &mut db_pool.clone()).await {
+            Ok(pixels) => pixels,
+            Err(err) => {
+                log::error!("Error finding pixels {}", err);
+                return Err(warp::reject::not_found())
+            }
+        };
+
+        // Delete every pixel for image
+        match queries::delete_pixels_for_image(pixel.id, frame, &mut db_pool.clone()).await{
+            Ok(_) => {},
+            Err(err) => {
+                log::error!("Error deleting pixels: {}", err.to_string());
+                return Err(warp::reject::not_found())
+            }
+        };
+
+        // Update every pixel by creating 
+        for pix in pixels.iter() {
+            let new_x = pix.x * 2;
+            let new_y = pix.y * 2;
+            for x in 0..2 {
+                for y in 0..2 {
+                    let inc = IncomingPixel{
+                        x: new_x + x,
+                        y: new_y + y,
+                        r: pix.r,
+                        g: pix.g,
+                        b: pix.b,
+                        alpha: pix.alpha,
+                        frame: pix.frame
+                    };
+                    match queries::save_pixel_for_image(pixel.id, &inc, &mut db_pool.clone()).await {
+                        Ok(_) => {},
+                        Err(err) => {
+                            log::error!("Error saving pixel while doubling density {}", err.to_string());
+                        }
+                    }
+                } 
+            }
+           
+        }
+        
+    }
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": ""}))

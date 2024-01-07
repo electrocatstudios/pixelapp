@@ -295,15 +295,15 @@ function confirmed_pixel_double(){
     newimagename: newname,
     multiplyingfactor: 2
   }
-  var url = "/api/pixelapp/double/" + window.pixel_id;
+  var url = "/api/double/" + window.pixel_id;
   $.ajax({
     url: url,
     data: JSON.stringify(data),
     type: 'POST',
     dataType: 'json',
-    beforeSend: function (xhr) {
-        xhr.setRequestHeader ("Authorization", "Bearer " + token);
-    },
+    // beforeSend: function (xhr) {
+    //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+    // },
     success: function(ret){
       // console.log(ret);
       if(ret.status != "ok"){
@@ -312,7 +312,7 @@ function confirmed_pixel_double(){
           return;
       }
 
-      window.location.href='/pixelapp/' + ret.guid
+      window.location.href='/pixel/' + window.pixel_id;
       
     },
     error: function(ret){
