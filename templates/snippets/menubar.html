@@ -29,7 +29,7 @@
             <button onclick='save_pixels()'>
                 Save
             </button>
-            <button onclick='window.location.href="/pixelapp"'>
+            <button onclick='window.location.href="/";'>
                 Back
             </button>
         </div> 
@@ -76,13 +76,18 @@
         <br>
         <div id='double_pixel_button' style='max-width:400px;float:left;'>
             <button onclick='show_confirm_pixel()'>Double Pixels</button>
+            <button onclick="show_duplicate_image()">Duplicate</button>
         </div>
-        <div id='double_pixel_confirm' style='max-width:400px;float:left;'>
-            <input placeholder="New Name" id='double_pixel_name'><br>
-            <button onclick='confirmed_pixel_double()'>Confirm</button>
+        <div id='duplicate_pixel_confirm' style='max-width:400px;float:left;'>
+            <input placeholder="New Name" id='duplicate_pixel_name'><br>
+            <button onclick='duplicate_image()'>Confirm</button>
             <button onclick='cancel_pixel_double()'>Cancel</button>
         </div>
         
+        <div id='double_pixel_confirm' style='max-width:400px;float:left;'>
+            <button onclick='confirmed_pixel_double()'>Confirm</button>
+            <button onclick='cancel_pixel_double()'>Cancel</button>
+        </div>
     </div>
 </div>
 

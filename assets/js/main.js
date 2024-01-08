@@ -101,6 +101,8 @@ $(document).ready(function(){
     performResize();
 
     $('#double_pixel_confirm').hide();
+
+    $('#duplicate_pixel_confirm').hide();
     $('#double_pixel_button').show();
 
     var w = (GAME_SIZE.x/BOX_WIDTH) * SCALE;
@@ -286,21 +288,21 @@ function toggle_animation(){
 // Double pixel density
 function show_confirm_pixel(){
   $('#double_pixel_confirm').show();
-  $('#double_pixel_button').hide();
+  $('#duplicate_pixel_confirm').hide();
 }
 
 function confirmed_pixel_double(){
-  var newname = $('#double_pixel_name').val();
   var data = {
-    newimagename: newname,
     multiplyingfactor: 2
-  }
+  };
+
   var url = "/api/double/" + window.pixel_id;
   $.ajax({
     url: url,
     data: JSON.stringify(data),
     type: 'POST',
     dataType: 'json',
+    contentType: "application/json; charset=utf-8",
     // beforeSend: function (xhr) {
     //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
     // },
@@ -322,7 +324,43 @@ function confirmed_pixel_double(){
   })
 }
 
+function duplicate_image() {
+  var newname = $('#duplicate_pixel_name').val();
+  var data = {
+    newimagename: newname,
+  };
+  console.log(data);
+  var url = "/api/duplicate/" + window.pixel_id;
+  $.ajax({
+    url: url,
+    data: JSON.stringify(data),
+    type: 'POST',
+    dataType: 'json',
+    contentType: "application/json; charset=utf-8",
+    success: function(ret) {
+      if(ret.status != "ok"){
+        console.log(ret.message);
+        $('#error').html(ret.message);
+        return;
+      }
+      window.location.href='/pixel/' + window.pixel_id;
+    },
+    error: function(err) {
+      console.log("Error while duplicating image");
+    }
+  });
+
+}
+
+function show_duplicate_image() {  
+  console.log("Showing the duplication screen");
+  $('#double_pixel_confirm').hide();
+  $('#duplicate_pixel_confirm').show();
+}
+
 function cancel_pixel_double(){
   $('#double_pixel_confirm').hide();
+  $('#duplicate_pixel_confirm').hide();
+  
   $('#double_pixel_button').show();
 }

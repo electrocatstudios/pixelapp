@@ -22,6 +22,12 @@ pub struct PixelImageDesc {
     pub pixelwidth: i32
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DuplicateImageData {
+    pub newimagename: String
+}
+
+
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct PixelPixel {

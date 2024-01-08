@@ -3,7 +3,7 @@ use warp::{filters::BoxedFilter, Filter, Reply, Rejection};
 use serde_json::json;
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::{queries,models::{PixelImageDesc,SavePixel, IncomingPixel}};
+use crate::db::{queries,models::{PixelImageDesc,SavePixel, IncomingPixel,DuplicateImageData}};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST routes
@@ -42,10 +42,18 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(double_pixel_data);
 
+    // POST /api/dupliate/<guid> - create a copy of the image with the given name
+    let duplicate_image = warp::post()
+        .and(warp::path!("api" / "duplicate" / String))
+        .and(json_body_duplicate_image())
+        .and(db_conn.clone())
+        .and_then(duplicate_image_impl);
+
     heartbeat_post
         .or(create_new_pixel)
         .or(save_pixels)
         .or(double_pixels)
+        .or(duplicate_image)
         .or(default)
         .boxed()
 }
@@ -58,6 +66,11 @@ fn json_body_new_pixel() -> impl Filter<Extract = (PixelImageDesc,), Error = war
 
 fn json_body_save_pixel() -> impl Filter<Extract = (SavePixel,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(1024 * 1024)
+        .and(warp::body::json())
+}
+
+fn json_body_duplicate_image() -> impl Filter<Extract = (DuplicateImageData,), Error = warp::Rejection> + Clone {
+    warp::body::content_length_limit(1024 * 16)
         .and(warp::body::json())
 }
 
@@ -201,6 +214,86 @@ async fn double_pixel_data(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dy
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": ""}))
+        )
+    )
+}
+
+async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let old_pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": "failed to create duplicate", "guid": ""}))
+                )
+            )
+        }
+    };
+    
+    let new_pixel = PixelImageDesc{
+        name: duplicate_data.newimagename.clone(),
+        description: old_pixel.description.clone(),
+        width: old_pixel.width,
+        height: old_pixel.height,
+        pixelwidth: old_pixel.pixelwidth
+    };
+
+    let new_guid = match queries::create_new_pixel(new_pixel, &mut db_pool.clone()).await {
+        Ok(guid) => guid,
+        Err(err) => {
+            log::error!("Error duplicating image: {}", err.to_string());
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": "failed to create duplicate", "guid": ""}))
+                )
+            )
+        }
+    };
+
+    let new_pixel = match queries::get_pixel_details(new_guid.clone(), &mut db_pool.clone()).await {
+        Ok(pixel) => pixel,
+        Err(err) => {
+            log::error!("Error getting new pixel after cloning: {}", err.to_string());
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": "failed to create duplicate", "guid": ""}))
+                )
+            )
+        }
+    };
+
+    let pixels = match queries::get_all_pixels_for_image(old_pixel.id, &mut db_pool.clone()).await {
+        Ok(pixels) => pixels,
+        Err(err) => {
+            log::error!("Error getting pixels for old image: {}", err.to_string());
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    for pix in pixels.iter() {
+        let inc = IncomingPixel{
+            x: pix.x,
+            y: pix.y,
+            r: pix.r,
+            g: pix.g,
+            b: pix.b,
+            alpha: pix.alpha,
+            frame: pix.frame,
+        };
+        match queries::save_pixel_for_image(new_pixel.id, &inc, &mut db_pool.clone()).await {
+            Ok(_) => {},
+            Err(err) => {
+                log::error!("Error saving pixel for new image: {}", err.to_string());
+            }
+        }
+
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "guid": new_guid}))
         )
     )
 }
