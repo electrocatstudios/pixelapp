@@ -64,6 +64,17 @@ pub struct SavePixel {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct PixelSaveFile {
+    pub name: String,
+    pub description: String,
+    pub width: i32,
+    pub height: i32,
+    pub pixelwidth: i32,
+    pub pixels: vec::Vec::<PixelPixel>,
+    pub shaders: vec::Vec::<PixelShading>
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct IncomingPixel {
     pub x: i32,
     pub y: i32,
@@ -72,6 +83,20 @@ pub struct IncomingPixel {
     pub b: i32,
     pub alpha: f64,
     pub frame: i32,
+}
+
+impl IncomingPixel {
+    pub fn from_pixel_pixel(pixel: &PixelPixel) -> Self {
+        IncomingPixel {
+            x: pixel.x,
+            y: pixel.y,
+            r: pixel.r,
+            g: pixel.g,
+            b: pixel.b,
+            alpha: pixel.alpha,
+            frame: pixel.frame
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,4 +108,18 @@ pub struct IncomingShader {
     pub b: i32,
     pub alpha: f64,
     pub frame: i32,
+}
+
+impl IncomingShader {
+    pub fn from_pixel_shader(shad: &PixelShading) -> Self {
+        IncomingShader {
+            x: shad.x,
+            y: shad.y,
+            r: shad.r,
+            g: shad.g,
+            b: shad.b,
+            alpha: shad.alpha,
+            frame: shad.frame
+        }
+    }
 }

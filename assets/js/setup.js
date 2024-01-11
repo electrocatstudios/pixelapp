@@ -64,17 +64,24 @@ function create_picture(){
 function load_from_file(){
     let filename = $("#filename")[0].files[0];
     let reader = new FileReader();
+    
+    var name = $('#name').val();
+    var desc = $('#description').val();
 
     // Closure to capture the file information.
     reader.onload = (function(filename) {
       return function(e) {
         let res = JSON.parse(e.target.result);
+        res.name = name;
+        res.description = desc;
+        
         let url = "/api/newfromfile";
         $.ajax({
             url: url,
             type: 'POST',
             data: JSON.stringify(res),
             dataType: 'json',
+            contentType: "application/json; charset=utf-8",
             // beforeSend: function (xhr) {
             //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
             // },
@@ -83,8 +90,8 @@ function load_from_file(){
                     $('#errorfileupload').html(ret.message);
                     return;
                 }
-                // TODO: make this work and do redirect
-                // window.location.href='/pixel/' + ret.pixelid;
+
+                window.location.href='/pixel/' + ret.pixelid;
             },
             error: function(ret){
                 console.log("ERROR while creting new game");

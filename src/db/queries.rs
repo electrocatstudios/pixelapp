@@ -6,6 +6,7 @@ use uuid::Uuid;
 use std::fs;
 
 use crate::db::models::PixelImage;
+use super::models::IncomingShader;
 use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
@@ -135,6 +136,27 @@ async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &
         }
 }
 
+async fn create_shading_for_image(image_id: i32, incoming: &IncomingShader, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    log::info!("Saving image shading");
+    match sqlx::query(
+        "INSERT INTO shading(image_id, x, y, \
+        r, g, b, alpha, frame) VALUES \
+        ($1, $2, $3, $4, $5, $6, $7, $8)"
+        )
+        .bind(&image_id)
+        .bind(&incoming.x)
+        .bind(&incoming.y)
+        .bind(&incoming.r)
+        .bind(&incoming.g)
+        .bind(&incoming.b)
+        .bind(&incoming.alpha)
+        .bind(&incoming.frame)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(DBError::DatabaseError(err.to_string()))
+        }
+}
+
 async fn update_pixel_for_image(pixel_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     match sqlx::query(
         "UPDATE pixel SET r=$1, g=$2, b=$3, \
@@ -145,6 +167,22 @@ async fn update_pixel_for_image(pixel_id: i32, incoming: &IncomingPixel, pool: &
         .bind(&incoming.b)
         .bind(&incoming.alpha)
         .bind(&pixel_id)
+        .execute(&*pool).await {
+            Ok(_) => Ok(()),
+            Err(err) => Err(DBError::DatabaseError(err.to_string()))
+        }
+}
+
+async fn update_shading_for_image(shad_id: i32, incoming: &IncomingShader, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "UPDATE shading SET r=$1, g=$2, b=$3, \
+        alpha=$4 WHERE id=$5"
+        )
+        .bind(&incoming.r)
+        .bind(&incoming.g)
+        .bind(&incoming.b)
+        .bind(&incoming.alpha)
+        .bind(&shad_id)
         .execute(&*pool).await {
             Ok(_) => Ok(()),
             Err(err) => Err(DBError::DatabaseError(err.to_string()))
@@ -172,6 +210,29 @@ pub async fn save_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool:
     log::debug!("Found pixel so updating");
     update_pixel_for_image(pixel.id, incoming, &mut pool.clone()).await
 } 
+
+pub async fn save_shader_for_image(image_id: i32, incoming: &IncomingShader, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    // log::info!("Saving image {}:{} - {},{},{}", incoming.x, incoming.y, incoming.r, incoming.g, incoming.b);
+
+    let pixel = match sqlx::query_as::<_, PixelShading>(
+            "SELECT * FROM shading WHERE image_id=$1 AND frame=$2 AND x=$3 AND y=$4"
+        )
+        .bind(image_id)
+        .bind(incoming.frame)
+        .bind(incoming.x)
+        .bind(incoming.y)
+        .fetch_one(&*pool).await {
+            Ok(pix) => pix,
+            Err(_) => {
+                log::debug!("Pixel being created");
+                // Pixel doesn't exist so create it
+                return create_shading_for_image(image_id, incoming, &mut pool.clone()).await;
+            }
+        };
+    log::debug!("Found pixel so updating");
+    update_shading_for_image(pixel.id, incoming, &mut pool.clone()).await
+} 
+
 
 pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     match sqlx::query(
