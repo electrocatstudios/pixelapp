@@ -131,7 +131,6 @@ function renderSingleFrame(){
 
 function getFileDownload(){
     // eg. http://localhost:8081/api/5b7f7738-101e-493b-a427-fdf88f2f29fd
-    let url = "/api/download/" + window.pixel_id;
     let filename = $('#filename').val();
     $('#filenameerror').html("");
     if(filename == undefined || filename == null || filename == ""){
@@ -139,6 +138,8 @@ function getFileDownload(){
         return;
     }
     filename = filename + ".json";
+
+    let url = "/api/saveasfile/" + window.pixel_id;
     $.ajax({
         url: url,
         type: 'GET',

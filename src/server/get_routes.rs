@@ -8,7 +8,7 @@ use sqlx::{Sqlite,SqlitePool,Pool};
 use image::{RgbaImage,Rgba};
 use image::io::Reader as ImageReader;
 
-use crate::db::models::PixelShading;
+use crate::db::models::{PixelShading, PixelSaveFile};
 use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 use crate::utils::{color_to_hex_string,hex_string_to_color};
 use crate::image::gif;
@@ -134,6 +134,11 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_render_info_impl);
 
+    // GET /api/saveasfile
+    let get_save_file = warp::path!("api" / "saveasfile" / String)
+        .and(db_conn.clone())
+        .and_then(get_save_file_impl);
+        
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -160,6 +165,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
         .or(get_rendered_spritesheet)
+        .or(get_save_file)
         .or(get_gif_render)
         .or(get_render_info)
         .or(home)
@@ -333,7 +339,6 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     )
 }
 
-// _, 
 async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
         Ok(res) => res,
@@ -664,6 +669,44 @@ async fn get_gif_render_impl(guid: String, query_string: String, db_pool: Pool<S
     Ok(
         Box::new(
             warp::reply::with_header(bytes, "Content-Type", "image/gif")
+        )
+    )
+}
+
+async fn get_save_file_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    // log::info!("Downloading save file impl");
+    let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    let pixel_list: Vec::<PixelPixel> = match queries::get_all_pixels_for_image(pixel.id, &mut db_pool.clone()).await {
+        Ok(p) => p,
+        Err(err) => {
+            log::error!("Error while loading pixels during get_save_file {}", err.to_string());
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    let ret = PixelSaveFile{
+        name: pixel.name.clone(),
+        description: pixel.description.clone(),
+        width: pixel.width,
+        height: pixel.height,
+        pixelwidth: pixel.pixelwidth,
+        pixels: pixel_list,
+        shaders: Vec::<PixelShading>::new()
+    };
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!(ret))
         )
     )
 }
