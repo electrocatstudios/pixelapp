@@ -35,18 +35,28 @@ function ToolManagerClickMenuItem(item_name){
     $('#toolbar_button_sample').removeClass("toolbar_item_selected");
     
     if(item_name == "zoom_plus"){
-        this.scale += 1;
-        if(this.scale > 4){
-            this.scale = 4;
-        }  
+        if(this.scale == 0.5) {
+            this.scale = 1;
+        } else {
+            this.scale += 1;
+            if(this.scale > 4){
+                this.scale = 4;
+            }
+        }
+          
         $('#toolbar_color_picker').hide(400);
         this.color_picker_shown = false;
         return; 
     }else if(item_name == "zoom_minus"){
-        this.scale -= 1;
-        if(this.scale < 1){
-            this.scale = 1;
+        if(this.scale == 1 || this.scale == 0.5) {
+            this.scale = 0.5;
+        } else {
+            this.scale -= 1;
+            if(this.scale < 1){
+                this.scale = 1;
+            }
         }
+        
         $('#toolbar_color_picker').hide(400);
         this.color_picker_shown = false;
         return;
