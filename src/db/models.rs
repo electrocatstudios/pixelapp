@@ -75,6 +75,12 @@ pub struct PixelSaveFile {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct PixelResizeData {
+    pub width: u32,
+    pub height: u32
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct IncomingPixel {
     pub x: i32,
     pub y: i32,

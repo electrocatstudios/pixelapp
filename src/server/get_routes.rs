@@ -308,7 +308,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
                 let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
                 let nxt_x = (offset_x + x) as u32;
                 let nxt_y = (offset_y + y) as u32;
-                if nxt_x < image.width() || nxt_y < image.height() {
+                if nxt_x < image.width() && nxt_y < image.height() {
                     image.put_pixel( 
                         nxt_x as u32, 
                         nxt_y as u32, 
@@ -394,7 +394,7 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
                     };
                     let nxt_x = (offset_x + x + (frame * pixel.width)) as u32;
                     let nxt_y = (offset_y + y) as u32;
-                    if nxt_x < image.width() || nxt_y < image.height() {
+                    if nxt_x < image.width() && nxt_y < image.height() {
                         image.put_pixel( 
                             nxt_x as u32, 
                             nxt_y as u32, 

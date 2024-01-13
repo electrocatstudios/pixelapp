@@ -3,7 +3,7 @@ use warp::{filters::BoxedFilter, Filter, Reply, Rejection};
 use serde_json::json;
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::{queries,models::{PixelImageDesc,SavePixel,IncomingPixel,IncomingShader,DuplicateImageData,PixelSaveFile}};
+use crate::db::{queries,models::{PixelImageDesc,SavePixel,IncomingPixel,IncomingShader,DuplicateImageData,PixelSaveFile,PixelResizeData}};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST routes
@@ -56,16 +56,25 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(newfromfile_impl);
 
+    // POST /api/size/<guid> - update the width and height for image
+    let resize_image = warp::post()
+        .and(warp::path!("api" / "size" / String))
+        .and(json_body_for_resize())
+        .and(db_conn.clone())
+        .and_then(resize_image_impl);
+
     heartbeat_post
         .or(create_new_pixel)
         .or(save_pixels)
         .or(double_pixels)
         .or(duplicate_image)
         .or(newfromfile)
+        .or(resize_image)
         .or(default)
         .boxed()
 }
 
+// -- JSON PARSERS 
 fn json_body_new_pixel() -> impl Filter<Extract = (PixelImageDesc,), Error = warp::Rejection> + Clone {
     // Perform coercion of incoming data into a PixelImageDesc
     warp::body::content_length_limit(1024 * 16)
@@ -86,6 +95,13 @@ fn json_body_newfromfile() ->  impl Filter<Extract = (PixelSaveFile,), Error = w
     warp::body::content_length_limit(1024 * 1024)
         .and(warp::body::json())
 }
+
+fn json_body_for_resize() -> impl Filter<Extract = (PixelResizeData,), Error = warp::Rejection> + Clone {
+    warp::body::content_length_limit(1024 * 16)
+        .and(warp::body::json())
+}
+
+// -- END JSON PARSERS 
 
 // Create the new pixel from the components
 async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
@@ -311,7 +327,6 @@ async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, 
     )
 }
 
-
 async fn newfromfile_impl(pixel_data: PixelSaveFile, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let new_pix_data = PixelImageDesc{
         name: pixel_data.name,
@@ -379,4 +394,35 @@ async fn newfromfile_impl(pixel_data: PixelSaveFile, db_pool: Pool<Sqlite>) -> R
             warp::reply::json(&json!({"status": "ok", "message": "", "guid": pix_id}))
         )
     )
+}
+
+async fn resize_image_impl(guid: String, newsize: PixelResizeData, db_pool: Pool<Sqlite> ) -> Result<Box<dyn Reply>, Rejection> {
+    let mut pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(
+                warp::reject::not_found()
+            )
+        }
+    };
+
+    pixel.width = newsize.width as i32;
+    pixel.height = newsize.height as i32;
+
+    match queries::update_pixel_details(pixel, &mut db_pool.clone()).await {
+        Ok(_) => {
+            Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "ok", "message": ""}))
+                )
+            )
+        },
+        Err(err) => {
+            log::error!("Error updating image size: {}", err.to_string());
+            Err(
+                warp::reject::not_found()
+            )
+        }
+    }
+
 }

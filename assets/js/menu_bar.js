@@ -86,12 +86,13 @@ function update_details(){
         height: parseInt(height)
     }
 
-    var url='/api/pixelapp/size/' + window.pixel_id;
+    var url='/api/size/' + window.pixel_id;
     $.ajax({
         url: url,
         type: 'POST',
         dataType: 'json',
         data: JSON.stringify(data),
+        contentType: "application/json; charset=utf-8",
         // beforeSend: function (xhr) {
         //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
         // },

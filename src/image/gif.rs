@@ -89,7 +89,7 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
                     let color = Rgba([red, green, blue, 255]);
                     let nxt_x = (offset_x + x) as u32;
                     let nxt_y = (offset_y + y) as u32;
-                    if nxt_x < nxt.width() || nxt_y < nxt.height() {
+                    if nxt_x < nxt.width() && nxt_y < nxt.height() {
                         nxt.put_pixel( 
                             nxt_x as u32, 
                             nxt_y as u32, 

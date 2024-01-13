@@ -73,6 +73,32 @@ pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<
     }
 }
 
+pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "UPDATE pixelimage SET name=$1, description=$2, \
+        width=$3, height=$4, pixelwidth=$5 WHERE id=$6"
+    )
+    .bind(pixel.name)
+    .bind(pixel.description)
+    .bind(pixel.width)
+    .bind(pixel.height)
+    .bind(pixel.pixelwidth)
+    .bind(pixel.id)
+    .execute(&*pool).await {
+        Ok(_) => Ok(()),
+        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
+/*
+    pub id: i32, // By default, using barrel's types::primary() results in i32
+   
+    pub width: i32,
+    pub height: i32,
+    pub pixelwidth: i32,
+    pub guid: String,
+*/
+
 pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
     let pixels = match sqlx::query_as::<_,PixelPixel>(
         "SELECT * FROM pixel WHERE image_id=$1 AND layer=$2 AND frame=$3"
@@ -232,7 +258,6 @@ pub async fn save_shader_for_image(image_id: i32, incoming: &IncomingShader, poo
     log::debug!("Found pixel so updating");
     update_shading_for_image(pixel.id, incoming, &mut pool.clone()).await
 } 
-
 
 pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     match sqlx::query(
