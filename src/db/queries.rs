@@ -124,7 +124,7 @@ pub async fn get_all_pixels_for_image(image_id: i32, pool: &mut Pool<Sqlite>) ->
             Err(err) => return Err(DBError::UnknownError(err.to_string()))
         };
     // TODO: Put in logging to check how many results there are.....
-    log::info!("Found {} results", pixels.len());
+    // log::info!("Found {} results", pixels.len());
     Ok(pixels)
 }
 

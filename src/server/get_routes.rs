@@ -248,7 +248,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
             )
         }
     };
-    log::info!("For guid {} we found image with id {}", guid, pixel.id);
+    // log::info!("For guid {} we found image with id {}", guid, pixel.id);
 
     // Get pixels and render to image - type of which is defined by image_type
     if image_type != "png"{
@@ -264,7 +264,7 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
         }
     };
 
-    log::info!("Found {} pixels during render", pixels.len());
+    // log::info!("Found {} pixels during render", pixels.len());
 
     if pixels.len() == 0 {
         log::error!("No pixels found for image");
@@ -573,7 +573,7 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
         }
     };
 
-    log::info!("Found {} pixels during render", pixels.len());
+    // log::info!("Found {} pixels during render", pixels.len());
 
     if pixels.len() == 0 {
         log::error!("No pixels found for image");

@@ -92,8 +92,7 @@ fn json_body_duplicate_image() -> impl Filter<Extract = (DuplicateImageData,), E
 }
 
 fn json_body_newfromfile() ->  impl Filter<Extract = (PixelSaveFile,), Error = warp::Rejection> + Clone {
-    warp::body::content_length_limit(1024 * 1024)
-        .and(warp::body::json())
+    warp::body::json()
 }
 
 fn json_body_for_resize() -> impl Filter<Extract = (PixelResizeData,), Error = warp::Rejection> + Clone {

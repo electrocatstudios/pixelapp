@@ -76,6 +76,7 @@ function load_from_file(){
         res.description = desc;
         
         let url = "/api/newfromfile";
+        console.log(res);
         $.ajax({
             url: url,
             type: 'POST',
@@ -91,7 +92,7 @@ function load_from_file(){
                     return;
                 }
 
-                window.location.href='/pixel/' + ret.pixelid;
+                window.location.href='/pixel/' + ret.guid;
             },
             error: function(ret){
                 console.log("ERROR while creting new game");
