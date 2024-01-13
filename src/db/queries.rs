@@ -142,7 +142,7 @@ pub async fn get_all_shaders_for_image(image_id: i32, pool: &mut Pool<Sqlite>) -
 }
 
 async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
-    log::info!("Saving image pixels");
+    // log::info!("Saving image pixels");
     match sqlx::query(
         "INSERT INTO pixel(image_id, x, y, \
         r, g, b, alpha, layer, frame) VALUES \
@@ -163,7 +163,7 @@ async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &
 }
 
 async fn create_shading_for_image(image_id: i32, incoming: &IncomingShader, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
-    log::info!("Saving image shading");
+    // log::info!("Saving image shading");
     match sqlx::query(
         "INSERT INTO shading(image_id, x, y, \
         r, g, b, alpha, frame) VALUES \
@@ -216,7 +216,7 @@ async fn update_shading_for_image(shad_id: i32, incoming: &IncomingShader, pool:
 }
 
 pub async fn save_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
-    log::info!("Saving image {}:{} - {},{},{}", incoming.x, incoming.y, incoming.r, incoming.g, incoming.b);
+    // log::info!("Saving image {}:{} - {},{},{}", incoming.x, incoming.y, incoming.r, incoming.g, incoming.b);
 
     let pixel = match sqlx::query_as::<_, PixelPixel>(
             "SELECT * FROM pixel WHERE image_id=$1 AND frame=$2 AND x=$3 AND y=$4"
@@ -261,7 +261,7 @@ pub async fn save_shader_for_image(image_id: i32, incoming: &IncomingShader, poo
 
 pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     match sqlx::query(
-        "DELETE FROM pixel WHERE image_id=$1"
+        "DELETE FROM pixelimage WHERE id=$1"
         )
         .bind(image_id)
         .execute(&*pool).await {
@@ -280,7 +280,7 @@ pub async fn delete_image_and_pixels(image_id: i32, pool: &mut Pool<Sqlite>) -> 
 pub async fn delete_pixels_for_image(image_id: i32, frame: i32, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     if frame == -1 {
         match sqlx::query(
-            "DELETE FROM pixel WHERE id=$1"
+            "DELETE FROM pixel WHERE image_id=$1"
         )
         .bind(image_id)
         .execute(&*pool).await {
@@ -289,7 +289,7 @@ pub async fn delete_pixels_for_image(image_id: i32, frame: i32, pool: &mut Pool<
         }
     } else {
         match sqlx::query(
-            "DELETE FROM pixel WHERE id=$1 AND frame=$2"
+            "DELETE FROM pixel WHERE image_id=$1 AND frame=$2"
         )
         .bind(image_id)
         .bind(frame)

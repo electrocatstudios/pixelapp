@@ -136,7 +136,7 @@ async fn save_pixel_data(save_pixel: SavePixel, db_pool: Pool<Sqlite>) -> Result
 
     // Loop through pixels and save
     for p in save_pixel.pixels.iter() {
-        log::info!("Next pixel {}:{} - {}", p.x, p.y, save_pixel.guid.clone());
+        // log::info!("Next pixel {}:{} - {}", p.x, p.y, save_pixel.guid.clone());
         match queries::save_pixel_for_image(pixel.id, p, &mut db_pool.clone()).await {
             Ok(_) => {},
             Err(err) => {
