@@ -15,6 +15,7 @@ function create_picture(){
     var width = $('#imgwidth').val();
     var height = $('#imgheight').val();
     var pixelwidth = $('#pixelwidth').val();
+    var collection = $('#collection').val();
     
     if(name == undefined || name == null || name == ""){
         $('#error').html("Name cannot be blank");
@@ -24,6 +25,7 @@ function create_picture(){
     var data = {
         name: name,
         description: desc,
+        collection: collection,
         width: parseInt(width),
         height: parseInt(height),
         pixelwidth: parseInt(pixelwidth)

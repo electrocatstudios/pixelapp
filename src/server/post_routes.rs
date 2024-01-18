@@ -258,9 +258,29 @@ async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, 
         }
     };
     
+    let new_desc: Option<String> = match old_pixel.description {
+        Some(desc) => Some(desc),
+        None => None
+    };
+
+    let new_coll: Option<String> = match old_pixel.collection_id {
+        Some(coll) => {
+            match queries::get_collection_by_id(coll, &mut db_pool.clone()).await {
+                Ok(c) => Some(c.name),
+                Err(err) => {
+                    log::warn!("{}", err.to_string());
+                    None
+                }
+            }
+            
+        },
+        None => None
+    };
+
     let new_pixel = PixelImageDesc{
         name: duplicate_data.newimagename.clone(),
-        description: old_pixel.description.clone(),
+        description: new_desc,
+        collection: new_coll,
         width: old_pixel.width,
         height: old_pixel.height,
         pixelwidth: old_pixel.pixelwidth
@@ -329,7 +349,8 @@ async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, 
 async fn newfromfile_impl(pixel_data: PixelSaveFile, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let new_pix_data = PixelImageDesc{
         name: pixel_data.name,
-        description: pixel_data.description,
+        description: Some(pixel_data.description),
+        collection: None,
         width: pixel_data.width,
         height: pixel_data.height,
         pixelwidth: pixel_data.pixelwidth

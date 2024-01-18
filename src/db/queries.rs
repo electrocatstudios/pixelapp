@@ -7,7 +7,7 @@ use std::fs;
 
 use crate::db::models::PixelImage;
 use super::models::IncomingShader;
-use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading}};
+use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading,Collection}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -334,4 +334,28 @@ pub async fn update_pixelwidth_for_pixel(image_id: i32, pixelwidth: i32, pool: &
             Ok(_) => Ok(()),
             Err(err) => Err(DBError::DatabaseError(err.to_string()))
         }
+}
+
+pub async fn get_collection_by_name(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<Collection, DBError> {
+    let collection = match sqlx::query_as::<_, Collection>(
+        "SELECT * FROM collection WHERE name=$1" 
+        )
+        .bind(&collection_name)
+        .fetch_one(&*pool).await {
+            Ok(c) => c,
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    Ok(collection)
+}
+
+pub async fn get_collection_by_id(collection_id: i32, pool: &mut Pool<Sqlite>) -> Result<Collection, DBError> {
+    let collection =  match sqlx::query_as::<_, Collection>(
+        "SELECT * FROM collection WHERE id=$1" 
+        )
+        .bind(&collection_id)
+        .fetch_one(&*pool).await {
+            Ok(c) => c,
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    Ok(collection)
 }
