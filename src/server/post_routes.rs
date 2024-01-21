@@ -134,6 +134,18 @@ async fn save_pixel_data(save_pixel: SavePixel, db_pool: Pool<Sqlite>) -> Result
         }
     };
 
+    // Remove all pixels for image to prevent confusion
+    match queries::delete_pixels_for_image(pixel.id, -1, &mut db_pool.clone()).await {
+        Ok(_) => {},
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    }
+
     // Loop through pixels and save
     for p in save_pixel.pixels.iter() {
         // log::info!("Next pixel {}:{} - {}", p.x, p.y, save_pixel.guid.clone());
