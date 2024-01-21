@@ -139,6 +139,8 @@ function ontouchstart(e){
     DRAW_MANAGER.draw();
   }else if(TOOL_MANAGER.cur_selected == "erase"){
     PIXEL_MANAGER.erasePixel(x,y);
+  } else if(TOOL_MANAGER.cur_selected == "sample"){
+    TOOL_MANAGER.sampleColor(x,y);
   }
 }
 
