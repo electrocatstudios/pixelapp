@@ -136,6 +136,15 @@ function click_menu_item(item_name){
     TOOL_MANAGER.clickMenuItem(item_name);
 }
 
+function hover_menu_item(item_name){
+    let prompt_val = item_name.charAt(0).toUpperCase() + item_name.slice(1)
+    $('#tooltip').html(prompt_val);
+}
+
+function hover_menu_exit() {
+    $('#tooltip').html("");
+}
+
 function position_color_bar_picker(){
     var screen_width = $(document).width();
     $('#toolbar_color_picker').css({'left': (screen_width/2) + ((GAME_SIZE.x/2) - 200 - 80) + 'px','top': 70 + "px"});

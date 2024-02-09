@@ -1,9 +1,43 @@
 <div id='pixel_toolbar'>
-    <div id='toolbar_button_paint' class='toolbar_item toolbar_item_selected' onclick='click_menu_item("paint");'>P</div>
-    <div id='toolbar_button_erase' class='toolbar_item' onclick='click_menu_item("erase");'>E</div>
-    <div id='toolbar_button_move' class='toolbar_item' onclick='click_menu_item("move");'>M</div>
+    <div 
+        id='toolbar_button_paint' 
+        class='toolbar_item toolbar_item_selected' 
+        onmouseover='hover_menu_item("paint");'
+        onmouseout='hover_menu_exit();'
+        onclick='click_menu_item("paint");' 
+    >
+        P
+    </div>
+    
+    <div 
+        id='toolbar_button_erase' 
+        class='toolbar_item' 
+        onhover='hover_menu_item("erase");'
+        onmouseover='hover_menu_item("erase");'
+        onmouseout='hover_menu_exit();'
+    >
+        E
+    </div>
 
-    <div id='toolbar_button_sample' class='toolbar_item' onclick='click_menu_item("sample");'>S</div>
+    <div 
+        id='toolbar_button_move' 
+        class='toolbar_item' 
+        onclick='click_menu_item("move");'
+        onmouseover='hover_menu_item("move");'
+        onmouseout='hover_menu_exit();'
+    >
+        M
+    </div>
+
+    <div 
+        id='toolbar_button_sample' 
+        class='toolbar_item' 
+        onclick='click_menu_item("sample");'
+        onmouseover='hover_menu_item("sample");'
+        onmouseout='hover_menu_exit();'
+    >
+        S
+    </div>
     <!-- <div id='toolbar_button_view' class='toolbar_item' onclick='click_menu_item("view")'>V</div> -->
     <div id='toolbar_button_color' class='toolbar_item' onclick='click_menu_item("color")'>
         <div id='toolbar_color_show'></div>
@@ -12,8 +46,24 @@
 </div>
 
 <div id='pixel_zoom_buttons'>
-    <div id='toolbar_button_zoom_plus' class='zoom_toolbar_item' onclick='click_menu_item("zoom_plus")'>+</div>
-    <div id='toolbar_button_zoom_minus' class='zoom_toolbar_item' onclick='click_menu_item("zoom_minus")'>-</div>
+    <div 
+        id='toolbar_button_zoom_plus' 
+        class='zoom_toolbar_item' 
+        onclick='click_menu_item("zoom_plus")'
+        onmouseover='hover_menu_item("Zoom In");'
+        onmouseout='hover_menu_exit();'
+    >
+        +
+    </div>
+    <div 
+        id='toolbar_button_zoom_minus' 
+        class='zoom_toolbar_item' 
+        onclick='click_menu_item("zoom_minus")'
+        onmouseover='hover_menu_item("Zoom Out");'
+        onmouseout='hover_menu_exit();'
+    >
+        -
+    </div>
 </div>
 
 <div id='toolbar_color_picker'>
@@ -35,11 +85,45 @@
 </div>
 
 <div id='toolbar_view_select'>
-    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_grid' onclick='toggle_view_button("grid")'>G</div>
-    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_background' onclick='toggle_view_button("background")'>B</div>
-    <div class='toolbar_view_button toolbar_view_button_selected' id='toolbar_view_select_foreground' onclick='toggle_view_button("foreground")'>F</div>
-    <div class='toolbar_view_button' id='toolbar_view_select_shader' onclick='toggle_view_button("shader")'>S</div>   
+    <div 
+        class='toolbar_view_button toolbar_view_button_selected' 
+        id='toolbar_view_select_grid' 
+        onclick='toggle_view_button("grid")'
+        onmouseover='hover_menu_item("Toggle Grid");'
+        onmouseout='hover_menu_exit();'
+    >
+        G
+    </div>
+    <div 
+        class='toolbar_view_button toolbar_view_button_selected' 
+        id='toolbar_view_select_background' 
+        onclick='toggle_view_button("background")'
+        onmouseover='hover_menu_item("Toggle Background");'
+        onmouseout='hover_menu_exit();'    
+    >
+        B
+    </div>
+    <div 
+        class='toolbar_view_button toolbar_view_button_selected' 
+        id='toolbar_view_select_foreground' 
+        onclick='toggle_view_button("foreground")'
+        onmouseover='hover_menu_item("Toggle Foreground");'
+        onmouseout='hover_menu_exit();'    
+    >
+        F
+    </div>
+    <div 
+        class='toolbar_view_button' 
+        id='toolbar_view_select_shader' 
+        onclick='toggle_view_button("shader")'
+        onmouseover='hover_menu_item("Toggle Shader Layer");'
+        onmouseout='hover_menu_exit();'     
+    >
+        S
+    </div>   
 </div>
+
+<div id="tooltip"></div>
 
 <style>
     .toolbar_item{
@@ -196,6 +280,13 @@
     .toolbar_view_button:hover{
         background-color: #8b8b8b;
         transition: all 0.3s ease;
+    }
+
+    #tooltip{
+        position: absolute;
+        color:white;
+        right: 20px;
+        top:70px;
     }
 </style>
 

@@ -92,9 +92,9 @@ function ToolManagerRefreshFrameButtons(){
       if(i == DRAW_MANAGER.cur_frame){
         output += "selected_button"
       }
-      output +="' onclick='load_frame(" + index + ")'>" + index +"</button>"
+      output +="' onclick='load_frame(" + index + ")' onmouseover='hover_menu_item(\"Show Frame " + index + "\");' onmouseout='hover_menu_exit();'>" + index +"</button>"
     }  
-    output += "<button class='frame_button' onclick='new_frame()'>+</button>";
+    output += "<button class='frame_button' onclick='new_frame()' onmouseover='hover_menu_item(\"Insert Frame\");' onmouseout='hover_menu_exit();'>+</button>";
     $('#frame_buttons').html(output);
   
 }
