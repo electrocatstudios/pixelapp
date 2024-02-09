@@ -42,8 +42,8 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
     // log::info!("{}", data.name);
     match sqlx::query(
             "INSERT INTO pixelimage(name, description, \
-            width, height, pixelwidth, guid, collection) VALUES \
-            ($1, $2, $3, $4, $5, $6)"
+            width, height, pixelwidth, guid, collection_id) VALUES \
+            ($1, $2, $3, $4, $5, $6, $7)"
             )
             .bind(&data.name)
             .bind(&data.description)
