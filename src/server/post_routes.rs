@@ -162,7 +162,6 @@ async fn save_pixel_data(save_pixel: SavePixel, db_pool: Pool<Sqlite>) -> Result
     }
 
     // Loop through shaders and save
-
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": ""}))
