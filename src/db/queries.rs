@@ -7,7 +7,7 @@ use std::fs;
 
 use crate::db::models::PixelImage;
 use super::models::IncomingShader;
-use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading}};
+use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading,Collection}};
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
@@ -23,11 +23,27 @@ pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelI
 pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> Result<String, DBError> {
     // Do the actual request to get the list
     let guid: String = format!("{:?}", Uuid::new_v4());
+    
+    let collection_id = match data.collection {
+        Some(name) => { 
+            match get_collection_by_name(name.clone(), &mut pool.clone()).await {
+                Ok(collection) => Some(collection.id),
+                Err(_) => {
+                    match make_new_collection(name, &mut pool.clone()).await {
+                        Ok(id) => Some(id),
+                        Err(err) => return Err(err)
+                    }
+                }
+            }
+        },
+        None => None  
+    };
+    
     // log::info!("{}", data.name);
     match sqlx::query(
             "INSERT INTO pixelimage(name, description, \
-            width, height, pixelwidth, guid) VALUES \
-            ($1, $2, $3, $4, $5, $6)"
+            width, height, pixelwidth, guid, collection_id) VALUES \
+            ($1, $2, $3, $4, $5, $6, $7)"
             )
             .bind(&data.name)
             .bind(&data.description)
@@ -35,6 +51,7 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
             .bind(&data.height)
             .bind(&data.pixelwidth)
             .bind(&guid.clone())
+            .bind(&collection_id)
             .execute(&*pool).await {
                 Ok(_) => Ok(guid),
                 Err(err) => Err(DBError::DatabaseError(err.to_string()))
@@ -334,4 +351,59 @@ pub async fn update_pixelwidth_for_pixel(image_id: i32, pixelwidth: i32, pool: &
             Ok(_) => Ok(()),
             Err(err) => Err(DBError::DatabaseError(err.to_string()))
         }
+}
+
+pub async fn get_collection_by_name(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<Collection, DBError> {
+    let collection = match sqlx::query_as::<_, Collection>(
+        "SELECT * FROM collection WHERE name=$1" 
+        )
+        .bind(&collection_name)
+        .fetch_one(&*pool).await {
+            Ok(c) => c,
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    Ok(collection)
+}
+
+pub async fn get_collection_by_id(collection_id: i32, pool: &mut Pool<Sqlite>) -> Result<Collection, DBError> {
+    let collection =  match sqlx::query_as::<_, Collection>(
+        "SELECT * FROM collection WHERE id=$1" 
+        )
+        .bind(&collection_id)
+        .fetch_one(&*pool).await {
+            Ok(c) => c,
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    Ok(collection)
+}
+
+pub async fn make_new_collection(name: String, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
+    // Check if already exists
+    match get_collection_by_name(name.clone(), &mut pool.clone()).await {
+        Ok(c) => {
+            log::error!("Tried to make collection when it already exists");
+            return Ok(c.id);
+        },
+        Err(_) => {}
+    }
+
+    // If not create new
+    match sqlx::query(
+        "INSERT INTO collection(name) VALUES($1)"
+        )
+        .bind(&name.clone())
+        .execute(&*pool).await {
+            Ok(_) => {},
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    }
+
+    // Select new and return 
+    match get_collection_by_name(name.clone(), &mut pool.clone()).await {
+        Ok(c) => {
+            Ok(c.id)
+        },
+        Err(err) => {
+            Err(err)
+        }
+    }
 }
