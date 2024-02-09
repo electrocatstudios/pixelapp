@@ -28,6 +28,7 @@ function ToolManagerUpdate(){
 function ToolManagerClickMenuItem(item_name){
     // Make sure the buttons aren't selected
     $('#toolbar_button_paint').removeClass("toolbar_item_selected");
+    $('#toolbar_button_fill').removeClass("toolbar_item_selected");
     $('#toolbar_button_erase').removeClass("toolbar_item_selected");
     $('#toolbar_button_move').removeClass("toolbar_item_selected");
     $('#toolbar_button_view').removeClass("toolbar_item_selected");

@@ -58,10 +58,13 @@ function oncanvasclick(evt){
     var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
     y -= dims.image_offset_y + DRAW_MANAGER.position.y;
     y = Math.floor(y/dims.box_width);
-
     if(TOOL_MANAGER.cur_selected == "paint"){
       PIXEL_MANAGER.alterPixel(x,y);
       DRAW_MANAGER.draw();
+    }else if(TOOL_MANAGER.cur_selected == "fill"){
+      // Call the fill function but not the start pixel
+      let startPixel = PIXEL_MANAGER.getPixelAt(x,y);
+      PIXEL_MANAGER.fillPixel(x,y,startPixel);
     }else if(TOOL_MANAGER.cur_selected == "erase"){
       PIXEL_MANAGER.erasePixel(x,y);
     }else if(TOOL_MANAGER.cur_selected == "sample"){
@@ -137,6 +140,10 @@ function ontouchstart(e){
   if(TOOL_MANAGER.cur_selected == "paint"){
     PIXEL_MANAGER.alterPixel(x,y);
     DRAW_MANAGER.draw();
+  } else if(TOOL_MANAGER.cur_selected == "fill") {
+    // Call the fill function but not the start pixel
+    let startPixel = PIXEL_MANAGER.getPixelAt(x,y);
+    PIXEL_MANAGER.fillPixel(x,y,startPixel);
   }else if(TOOL_MANAGER.cur_selected == "erase"){
     PIXEL_MANAGER.erasePixel(x,y);
   } else if(TOOL_MANAGER.cur_selected == "sample"){
