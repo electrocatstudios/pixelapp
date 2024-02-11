@@ -12,7 +12,7 @@ $(document).ready(function () {
 
     $('#width_selector').val(window.picture_width);
     $('#height_selector').val(window.picture_height);
-    
+    $('#pixel_width_display').val(window.pixel_size);
     $('#backgroundcolor').val("#000000");
 });
 

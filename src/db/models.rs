@@ -5,18 +5,20 @@ use std::vec;
 pub struct PixelImage {
     pub id: i32, // By default, using barrel's types::primary() results in i32
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub owner_id: i32,
     pub width: i32,
     pub height: i32,
     pub pixelwidth: i32,
     pub guid: String,
+    pub collection_id: Option<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PixelImageDesc {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
+    pub collection: Option<String>,
     pub width: i32,
     pub height: i32,
     pub pixelwidth: i32
@@ -26,7 +28,6 @@ pub struct PixelImageDesc {
 pub struct DuplicateImageData {
     pub newimagename: String
 }
-
 
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
@@ -128,4 +129,29 @@ impl IncomingShader {
             frame: shad.frame
         }
     }
+}
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct Collection {
+    pub id: i32,
+    pub name: String,
+    pub creator: Option<String>
+}
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct Palette {
+    pub id: i32,
+    pub name: String,
+    pub description: Option<String>
+}
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct PaletteColor {
+    pub id: i32,
+    pub palette_id: i32,
+    pub r: i32,
+    pub g: i32,
+    pub b: i32,
+    pub alpha: f64,
+    pub name: Option<String>
 }

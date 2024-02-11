@@ -25,6 +25,7 @@ function PixelManager(){
     this.max_frame = 0;
 
     this.alterPixel = PixelManagerAlterPixel;
+    this.fillPixel = PixelManagerDoFill;
     this.getPixelAt = PixelManagerGetPixelAt;
 
     this.loadData(this.pixel_id);
@@ -258,6 +259,83 @@ function PixelManagerAlterPixel(x,y){
     }else if(DRAW_MANAGER.view_list.foreground) {
         // Draw to foreground
         this.setPixel(x, y, col_obj.r, col_obj.g, col_obj.b, DRAW_MANAGER.alpha_channel, DRAW_MANAGER.cur_frame);
+    }
+}
+
+function pixels_match(pix1, pix2){
+    if(pix1 === null && pix2 === null){
+        // Both null - match
+        return true;
+    }
+
+    if( (pix1 === null && pix2.alpha === 0)
+        || (pix2 === null && pix1.alpha === 0)
+    ){
+        // One pixel is null - the other has been erased - match
+        return true;
+    }
+
+    if( (pix1 === null && pix2 !== null)
+        || (pix2 === null && pix1 !==null) ){
+        // One pixel is null and the other is not - no match
+        return false;
+    }
+    
+    if(pix1.alpha === 0 && pix2.alpha === 0) {
+        // Both pixels were erased - match
+        return true;
+    }
+    
+    return (
+        pix1.r === pix2.r 
+        && pix1.g === pix2.g
+        && pix1.b === pix2.b
+        && pix1.alpha === pix2.alpha
+    )
+}
+
+function PixelManagerDoFill(x,y, startPixel) {
+    // Set the current pixel
+    let curPixel = this.getPixelAt(x,y);
+    if(startPixel === null && curPixel !== null && curPixel.alpha !== 0){
+        // Different pixel stop the run
+        return;
+    }else if( 
+        !(curPixel === null && startPixel === null) 
+        && !pixels_match(curPixel, startPixel) 
+    ){
+        // Different pixel stop the run
+        return;
+    }
+    
+    this.alterPixel(x,y);
+
+    // Loop through surrounding pixels and set them
+    if(x!= 0){
+        let pix = this.getPixelAt(x-1,y);
+        if(pixels_match(startPixel, pix)){
+            this.fillPixel(x-1,y,startPixel);
+        }
+    }
+    if(y!=0){
+        let pix = this.getPixelAt(x,y-1);
+        if(pixels_match(startPixel, pix)){
+            this.fillPixel(x,y-1,startPixel);
+        }
+    }
+    let max_x = Math.floor(window.picture_width/window.pixel_size);
+    let max_y = Math.floor(window.picture_height/window.pixel_size);
+    if(x < max_x-1){
+        let pix = this.getPixelAt(x+1,y);
+        if(pixels_match(startPixel, pix)){
+            this.fillPixel(x+1,y,startPixel);
+        }
+    }
+    if(y < max_y-1){
+        let pix = this.getPixelAt(x,y+1);
+        if(pixels_match(startPixel, pix)){
+            this.fillPixel(x,y+1,startPixel);
+        }
     }
 }
 

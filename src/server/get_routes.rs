@@ -696,9 +696,14 @@ async fn get_save_file_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<d
         }
     };
 
+    let new_desc = match pixel.description {
+        Some(desc) => desc,
+        None => "".to_string()
+    };
+
     let ret = PixelSaveFile{
         name: pixel.name.clone(),
-        description: pixel.description.clone(),
+        description: new_desc,
         width: pixel.width,
         height: pixel.height,
         pixelwidth: pixel.pixelwidth,
