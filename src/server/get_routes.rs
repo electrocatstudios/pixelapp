@@ -383,7 +383,7 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
                     let offset_y = pix.y * pixel.pixelwidth;
 
                     let col_hex = color_to_hex_string(pix.r as u8, pix.g as u8, pix.b as u8);
-
+                    // Check for a color substitution
                     let color = match query_subs.get(&col_hex) {
                         Some(new_col) => {
                             // log::info!("Subbing color: {} -> {}", new_col.clone(), col_hex);
@@ -392,6 +392,8 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
                         },
                         None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
                     };
+                    // Check if shader exists and mix it in, if so
+                    
                     let nxt_x = (offset_x + x + (frame * pixel.width)) as u32;
                     let nxt_y = (offset_y + y) as u32;
                     if nxt_x < image.width() && nxt_y < image.height() {

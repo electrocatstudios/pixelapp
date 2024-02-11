@@ -90,15 +90,6 @@ pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) ->
     }
 }
 
-/*
-    pub id: i32, // By default, using barrel's types::primary() results in i32
-   
-    pub width: i32,
-    pub height: i32,
-    pub pixelwidth: i32,
-    pub guid: String,
-*/
-
 pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
     let pixels = match sqlx::query_as::<_,PixelPixel>(
         "SELECT * FROM pixel WHERE image_id=$1 AND layer=$2 AND frame=$3"
