@@ -129,6 +129,19 @@ impl IncomingShader {
             frame: shad.frame
         }
     }
+
+    // Turn incoming pixel into incoming shader
+    pub fn from_incoming_pixel(shad: &IncomingPixel) -> Self {
+        IncomingShader {
+            x: shad.x,
+            y: shad.y,
+            r: shad.r,
+            g: shad.g,
+            b: shad.b,
+            alpha: shad.alpha,
+            frame: shad.frame
+        }
+    }
 }
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
