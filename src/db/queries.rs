@@ -149,13 +149,13 @@ pub async fn get_all_shaders_for_image(image_id: i32, pool: &mut Pool<Sqlite>) -
     Ok(pixels)
 }
 
-pub async fn get_shader_for_image_at_point(image_id: i32, layer: i32, x: i32, y: i32, pool: &mut Pool<Sqlite>) -> Result<PixelShading, DBError> {
+pub async fn get_shader_for_image_at_point(image_id: i32, frame: i32, x: i32, y: i32, pool: &mut Pool<Sqlite>) -> Result<PixelShading, DBError> {
     let pixel = match sqlx::query_as::<_,PixelShading>(
         "SELECT * FROM shading WHERE image_id=$1 \
-             AND layer=$2 AND x=$3 AND y=$4 "
+             AND frame=$2 AND x=$3 AND y=$4 "
         )
         .bind(image_id)
-        .bind(layer)
+        .bind(frame)
         .bind(x)
         .bind(y)
         .fetch_one(&*pool).await {

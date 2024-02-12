@@ -78,6 +78,31 @@ impl GifRenderQuery {
     pub fn get_render_type(&self) -> GifRenderType {
         self.render_type
     }
+
+    pub fn get_color_subs(self) -> HashMap<String,String> {
+        let mut ret = HashMap::<String,String>::new();
+        match self.query {
+            Some(search) => {
+                // Get every pair of subs and put in hashmap
+                let pairs = search.split("&");
+                for pair in pairs {
+                    let p_split: Vec::<&str> = pair.split("=").collect();
+                    if p_split.len() != 2 {
+                        continue;
+                    }
+                    if p_split[0].len() != 6 || p_split[1].len() != 6 {
+                        continue;
+                    }
+                    if ret.contains_key(p_split[0]) {
+                        continue;
+                    }
+                    ret.insert(p_split[0].to_string(), p_split[1].to_string());
+                }
+                ret
+            },
+            None => ret
+        }
+    }
 }
 
 #[cfg(test)]

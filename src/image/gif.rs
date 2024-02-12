@@ -1,7 +1,7 @@
 use sqlx::Sqlite;
 use sqlx::pool::Pool;
 use std::io::Cursor;
-use image::{Rgba,RgbaImage};
+use image::{Pixel,Rgba,RgbaImage};
 
 use gif::{Frame, Encoder, Repeat};
 
@@ -9,6 +9,7 @@ use std::vec::Vec;
 
 use crate::db::queries;
 use crate::server::query_params::{GifRenderQuery, GifRenderType};
+use crate::utils::*;
 
 pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlite>) -> Result<Box<Vec<u8>>, String> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
@@ -49,6 +50,10 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
             first
         }
     };
+
+    let query_subs = query.get_color_subs();
+    // log::info!("{:?}", query_subs);
+
     // log::info!("{:?} -> {:?}", query.get_render_type(), frame_order);
     for frame_counter in frame_order.iter() {
         let single_pixel = Rgba([0, 0, 0, 255]);
@@ -63,7 +68,27 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
         };
 
         for pix in pixels.iter() {
-        
+            // TODO: Proper color matching with the background
+            let col_hex = color_to_hex_string(pix.r as u8, pix.g as u8, pix.b as u8);
+            // Check for a color substitution
+            let mut color: Rgba<u8> = match query_subs.get(&col_hex) {
+                Some(new_col) => {
+                    // log::info!("Subbing color: {} -> {}", new_col.clone(), col_hex);
+                    let (r, g, b) = hex_string_to_color(new_col.to_string());
+                    Rgba([r,g,b,(pix.alpha * 255.0) as u8])
+                },
+                None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
+            };
+            // Check if shader exists and mix it in, if so
+            match queries::get_shader_for_image_at_point(pixel.id, pix.frame, pix.x, pix.y, &mut db_pool.clone()).await {
+                Ok(shad) => {
+                    // log::info!("Found a pixel shader");
+                    let shader_col = Rgba([shad.r as u8, shad.g as u8, shad.b as u8, (shad.alpha * 255.0) as u8]);
+                    color.blend(&shader_col);
+                },
+                Err(_) => {}
+            };
+            
             for x in 0..pixel.pixelwidth {
                 for y in 0..pixel.pixelwidth {
                     let offset_x = pix.x * pixel.pixelwidth;
@@ -81,12 +106,6 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
                     //     None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
                     // };
 
-                    // TODO: Proper color matching with the background
-                    let red = (pix.r as f64 * pix.alpha) as u8;
-                    let green = (pix.g as f64 * pix.alpha) as u8;
-                    let blue = (pix.b as f64 * pix.alpha) as u8;
-                    
-                    let color = Rgba([red, green, blue, 255]);
                     let nxt_x = (offset_x + x) as u32;
                     let nxt_y = (offset_y + y) as u32;
                     if nxt_x < nxt.width() && nxt_y < nxt.height() {
