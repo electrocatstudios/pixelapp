@@ -15,7 +15,6 @@ pub async fn start(addr: impl Into<SocketAddr>, db_conn: &mut BoxedFilter<(Sqlit
 
     let routes = post_routes.or(delete_routes).or(get_routes);
 
-
     warp::serve(routes)
         .run(addr)
         .await;
