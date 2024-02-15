@@ -107,15 +107,6 @@ pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) ->
     }
 }
 
-/*
-    pub id: i32, // By default, using barrel's types::primary() results in i32
-   
-    pub width: i32,
-    pub height: i32,
-    pub pixelwidth: i32,
-    pub guid: String,
-*/
-
 pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
     let pixels = match sqlx::query_as::<_,PixelPixel>(
         "SELECT * FROM pixel WHERE image_id=$1 AND layer=$2 AND frame=$3"
@@ -156,6 +147,23 @@ pub async fn get_all_shaders_for_image(image_id: i32, pool: &mut Pool<Sqlite>) -
         };
 
     Ok(pixels)
+}
+
+pub async fn get_shader_for_image_at_point(image_id: i32, frame: i32, x: i32, y: i32, pool: &mut Pool<Sqlite>) -> Result<PixelShading, DBError> {
+    let pixel = match sqlx::query_as::<_,PixelShading>(
+        "SELECT * FROM shading WHERE image_id=$1 \
+             AND frame=$2 AND x=$3 AND y=$4 "
+        )
+        .bind(image_id)
+        .bind(frame)
+        .bind(x)
+        .bind(y)
+        .fetch_one(&*pool).await {
+            Ok(pix) => pix,
+            Err(_) => return Err(DBError::NoneFound)
+        };
+
+    Ok(pixel)
 }
 
 async fn create_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {

@@ -5,7 +5,7 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Sqlite,SqlitePool,Pool};
 
-use image::{RgbaImage,Rgba};
+use image::{Pixel, Rgba, RgbaImage};
 use image::io::Reader as ImageReader;
 
 use crate::db::models::{PixelShading, PixelSaveFile};
@@ -300,12 +300,20 @@ async fn get_image_rendered(guid: String, image_type: String, db_pool: Pool<Sqli
     // Create new image, render the pixels, save as temp file
     let mut image: RgbaImage = RgbaImage::new(pixel.width as u32, pixel.height as u32);
     for pix in pixels.iter() {
-        
+        let mut color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
+        match queries::get_shader_for_image_at_point(pixel.id, 0, pix.x, pix.y, &mut db_pool.clone()).await {
+            Ok(shad) => {
+                // log::info!("Found a pixel shader");
+                let shader_col = Rgba([shad.r as u8, shad.g as u8, shad.b as u8, (shad.alpha * 255.0) as u8]);
+                color.blend(&shader_col);
+            },
+            Err(_) => {}
+        };
+
         for x in 0..pixel.pixelwidth {
             for y in 0..pixel.pixelwidth {
                 let offset_x = pix.x * pixel.pixelwidth;
                 let offset_y = pix.y * pixel.pixelwidth;
-                let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
                 let nxt_x = (offset_x + x) as u32;
                 let nxt_y = (offset_y + y) as u32;
                 if nxt_x < image.width() && nxt_y < image.height() {
@@ -363,6 +371,20 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
     };
     // log::info!("We have found {} frames", frame_count);
 
+    // DEBUG
+    // match queries::get_all_shaders_for_image(pixel.id, &mut db_pool.clone()).await {
+    //     Ok(shad) => {
+    //         log::info!("Found {} shading items", shad.len());
+    //         for s in shad.iter(){
+    //             log::info!("Shader {}", s);
+    //         }
+    //     },
+    //     Err(err) => {
+    //         log::info!("Error while getting shads {}", err.to_string());
+    //     }
+    // };
+    // END DEBUG
+
     let pathname: String = "spritesheets/".to_owned() + pixel.guid.clone().as_str() + ".png";
     let mut image: RgbaImage = RgbaImage::new( (pixel.width * frame_count) as u32, pixel.height as u32);
     
@@ -376,22 +398,32 @@ async fn get_rendered_spritesheet_impl(guid: String, query_string: String, db_po
         };
 
         for pix in pixels.iter() {
-        
+            // Calculate color
+            let col_hex = color_to_hex_string(pix.r as u8, pix.g as u8, pix.b as u8);
+            // Check for a color substitution
+            let mut color = match query_subs.get(&col_hex) {
+                Some(new_col) => {
+                    // log::info!("Subbing color: {} -> {}", new_col.clone(), col_hex);
+                    let (r, g, b) = hex_string_to_color(new_col.to_string());
+                    Rgba([r,g,b,(pix.alpha * 255.0) as u8])
+                },
+                None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
+            };
+            // Check if shader exists and mix it in, if so
+            match queries::get_shader_for_image_at_point(pixel.id, pix.frame, pix.x, pix.y, &mut db_pool.clone()).await {
+                Ok(shad) => {
+                    // log::info!("Found a pixel shader");
+                    let shader_col = Rgba([shad.r as u8, shad.g as u8, shad.b as u8, (shad.alpha * 255.0) as u8]);
+                    color.blend(&shader_col);
+                },
+                Err(_) => {}
+            };
+            
             for x in 0..pixel.pixelwidth {
                 for y in 0..pixel.pixelwidth {
                     let offset_x = pix.x * pixel.pixelwidth;
                     let offset_y = pix.y * pixel.pixelwidth;
 
-                    let col_hex = color_to_hex_string(pix.r as u8, pix.g as u8, pix.b as u8);
-
-                    let color = match query_subs.get(&col_hex) {
-                        Some(new_col) => {
-                            // log::info!("Subbing color: {} -> {}", new_col.clone(), col_hex);
-                            let (r, g, b) = hex_string_to_color(new_col.to_string());
-                            Rgba([r,g,b,(pix.alpha * 255.0) as u8])
-                        },
-                        None => Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ])
-                    };
                     let nxt_x = (offset_x + x + (frame * pixel.width)) as u32;
                     let nxt_y = (offset_y + y) as u32;
                     if nxt_x < image.width() && nxt_y < image.height() {
@@ -611,12 +643,19 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
     log::info!("Image dim {}:{}", image.width(), image.height());
 
     for pix in pixels.iter() {
-        
+        let mut color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);         
+        match queries::get_shader_for_image_at_point(pixel.id, 0, pix.x, pix.y, &mut db_pool.clone()).await {
+            Ok(shad) => {
+                // log::info!("Found a pixel shader");
+                let shader_col = Rgba([shad.r as u8, shad.g as u8, shad.b as u8, (shad.alpha * 255.0) as u8]);
+                color.blend(&shader_col);
+            },
+            Err(_) => {}
+        };
         for x in 0..pixel.pixelwidth {
             for y in 0..pixel.pixelwidth {
                 let offset_x = pix.x * pixel.pixelwidth;
                 let offset_y = pix.y * pixel.pixelwidth;
-                let color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);
                 let nxt_x = if flip {
                     ((image.width() as i32 - 1) - (offset_x + x)) as u32 
                 } else {

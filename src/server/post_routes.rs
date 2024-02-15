@@ -161,6 +161,23 @@ async fn save_pixel_data(save_pixel: SavePixel, db_pool: Pool<Sqlite>) -> Result
         }
     }
 
+    // Loop through shaders and upsert
+    for shad in save_pixel.shaders.iter() {
+        let inc = IncomingShader::from_incoming_pixel(shad);
+
+        match queries::save_shader_for_image(pixel.id, &inc, &mut db_pool.clone()).await {
+            Ok(_) => {},
+            Err(err) => {
+                log::error!("Error saving shader during save: {}", err.to_string());
+                return Ok(
+                    Box::new(
+                        warp::reply::json(&json!({"status": "fail", "message": "failed to find image during shader saving"}))
+                    )
+                )
+            }
+        }
+    }
+
     // Loop through shaders and save
     Ok(
         Box::new(

@@ -107,10 +107,11 @@ function getPixelSpriteSheet(){
 
 function getPixelGif() {
     let include_reverse = ($('#include_reverse:checked').length > 0);
+
     if(include_reverse){
-        window.location.href='/img/gif/' + window.pixel_id + "?render_type=forward";
+        callUrlWithColorSubs('/img/gif/' + window.pixel_id + "?render_type=both&", true);
     } else {
-        window.location.href='/img/gif/' + window.pixel_id + "?render_type=both";
+        callUrlWithColorSubs('/img/gif/' + window.pixel_id + "?render_type=forward&", true);
     }
 }
 
@@ -170,10 +171,9 @@ function closeSubColorArea(){
     $('#color_values').hide();
 }
 
-function getSubColorSpritesheet(){
-    let query = "?"
+function callUrlWithColorSubs(url, new_window) {
+    let query = ""
     let bFoundOne = false;
-    // Get the color substitutes
     let el_count = 0;
     $('#color_values span').each(function(ind, el){
         
@@ -189,8 +189,17 @@ function getSubColorSpritesheet(){
         }
         el_count += 1;
         if(el_count == number_colors){
-            window.location.href='/img/spritesheet/' + window.pixel_id + query;
+            if(new_window){
+                window.open(url + query, '_blank');
+            } else {
+                window.location.href= url + query;
+            }
         }
         
     })
+}
+
+function getSubColorSpritesheet(){
+    // Get the color substitutes
+    callUrlWithColorSubs('/img/spritesheet/' + window.pixel_id + "?");
 }

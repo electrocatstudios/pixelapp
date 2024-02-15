@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::vec;
+use std::{fmt,vec};
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct PixelImage {
@@ -55,6 +55,15 @@ pub struct PixelShading {
     pub b: i32,
     pub alpha: f64,
     pub frame: i32,
+}
+
+impl fmt::Display for PixelShading {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self{
+            _ => write!(f, "{:?}", self) // For now all variants are treated the same way
+                                         // with this catch-all statement
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -119,6 +128,19 @@ pub struct IncomingShader {
 
 impl IncomingShader {
     pub fn from_pixel_shader(shad: &PixelShading) -> Self {
+        IncomingShader {
+            x: shad.x,
+            y: shad.y,
+            r: shad.r,
+            g: shad.g,
+            b: shad.b,
+            alpha: shad.alpha,
+            frame: shad.frame
+        }
+    }
+
+    // Turn incoming pixel into incoming shader
+    pub fn from_incoming_pixel(shad: &IncomingPixel) -> Self {
         IncomingShader {
             x: shad.x,
             y: shad.y,

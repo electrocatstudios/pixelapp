@@ -31,6 +31,7 @@ pub fn hex_string_to_color(hex: String) -> (u8, u8, u8) {
     (r,g,b)
 }
 
+
 #[cfg(test)]
 mod utils_tests {
     use super::{color_to_hex_string,hex_string_to_color};
@@ -53,4 +54,5 @@ mod utils_tests {
         // Check failure conditions
         assert_eq!(hex_string_to_color("fff".to_string()), (0,0,0));
     }
+
 }

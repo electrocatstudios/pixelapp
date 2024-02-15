@@ -12,7 +12,8 @@ const DB_CONN_STRING: &str = "sqlite://pixel.db";
 
 pub enum DBError {
     DatabaseError(String),
-    UnknownError(String)
+    UnknownError(String),
+    NoneFound
 }
 
 impl fmt::Display for DBError {
@@ -20,6 +21,7 @@ impl fmt::Display for DBError {
         match self {
             DBError::DatabaseError(err_str) => write!(f, "DatabaseError: {}", err_str),
             DBError::UnknownError(err_str) => write!(f, "UnknownError: {}", err_str),
+            DBError::NoneFound => write!(f, "No result found")
         }
     }
 }
