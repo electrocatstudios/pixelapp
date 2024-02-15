@@ -87,6 +87,7 @@ $(document).ready(function(){
 
     $('#canvas').click(oncanvasclick);
     $('#canvas').mousemove(onmousemove);
+    $('#canvas').on('mouseleave', onmouseleave);
     
     $('#canvas').mousedown(onmousedown);
     $('#canvas').mouseup(onmouseup);

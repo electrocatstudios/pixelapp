@@ -59,8 +59,7 @@ function oncanvasclick(evt){
     y -= dims.image_offset_y + DRAW_MANAGER.position.y;
     y = Math.floor(y/dims.box_width);
     if(TOOL_MANAGER.cur_selected == "paint"){
-      PIXEL_MANAGER.alterPixel(x,y);
-      DRAW_MANAGER.draw();
+      // Should be handled in the mousedown and mousemove
     }else if(TOOL_MANAGER.cur_selected == "fill"){
       // Call the fill function but not the start pixel
       let startPixel = PIXEL_MANAGER.getPixelAt(x,y);
@@ -78,21 +77,39 @@ var bButtonPressed = false;
 let last_x = null;
 let last_y = null;
 
-function onmousemove(event){
+function onmousemove(evt){
   if(!bButtonPressed){
     return;
   }
 
-  var x = Math.floor((event.pageX - canvas.offsetLeft)/BOX_WIDTH);
-  var y = Math.floor((event.pageY - canvas.offsetTop)/BOX_WIDTH);
-  var diff_x = (event.pageX - canvas.offsetLeft);
-  var diff_y = (event.pageY - canvas.offsetTop);
-  handlemove(diff_x, diff_y);
+  if (TOOL_MANAGER.cur_selected == "paint" && bButtonPressed) {
+    let dims = PIXEL_MANAGER.getDimensions();
+    var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
+    x -= dims.image_offset_x + DRAW_MANAGER.position.x;
+    x = Math.floor(x/dims.box_width);
   
+    var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
+    y -= dims.image_offset_y + DRAW_MANAGER.position.y;
+    y = Math.floor(y/dims.box_width);
+
+    PIXEL_MANAGER.alterPixel(x,y);
+    DRAW_MANAGER.draw();
+  } else {
+    var x = Math.floor((evt.pageX - canvas.offsetLeft)/BOX_WIDTH);
+    var y = Math.floor((evt.pageY - canvas.offsetTop)/BOX_WIDTH);
+    var diff_x = (evt.pageX - canvas.offsetLeft);
+    var diff_y = (evt.pageY - canvas.offsetTop);
+    handlemove(diff_x, diff_y);
+  }
+}
+
+function onmouseleave(evt) {
+  // Make user button is released when leaving the canvas area
+  bButtonPressed = false;
 }
 
 function handlemove(diff_x, diff_y){
-
+  // For calculating the move amount if dragging
   if(TOOL_MANAGER.cur_selected == "move" && bButtonPressed){
     if(last_x != null){
       DRAW_MANAGER.move(diff_x-last_x, null);
@@ -105,17 +122,30 @@ function handlemove(diff_x, diff_y){
     }
     last_y = diff_y;
     
-  }else{
+  } else {
     last_x = null;
     last_y = null;
   }
 
 }
 
-function onmousedown(event){
+function onmousedown(evt){
   bButtonPressed = true;
+  let dims = PIXEL_MANAGER.getDimensions();
+  var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
+  x -= dims.image_offset_x + DRAW_MANAGER.position.x;
+  x = Math.floor(x/dims.box_width);
+
+  var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
+  y -= dims.image_offset_y + DRAW_MANAGER.position.y;
+  y = Math.floor(y/dims.box_width);
+
+  if (TOOL_MANAGER.cur_selected == "paint" && bButtonPressed) {
+    PIXEL_MANAGER.alterPixel(x,y);
+    DRAW_MANAGER.draw();
+  }
 }
-function onmouseup(event){
+function onmouseup(evt){
   bButtonPressed = false;
   last_x = null;
   last_y = null;
