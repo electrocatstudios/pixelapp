@@ -10,7 +10,6 @@ var GAME_SIZE = {} ;
 var GAME_SIZE_MIN = {x: 300, y: 500}
 var OUT_SIZE = {};
 
-
 var SCALE = 4;
 var BOX_WIDTH = 20;
 
