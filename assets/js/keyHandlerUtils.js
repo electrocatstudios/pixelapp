@@ -65,7 +65,7 @@ function oncanvasclick(evt){
       let startPixel = PIXEL_MANAGER.getPixelAt(x,y);
       PIXEL_MANAGER.fillPixel(x,y,startPixel);
     }else if(TOOL_MANAGER.cur_selected == "erase"){
-      PIXEL_MANAGER.erasePixel(x,y);
+      // Should be handled in the mousedown and mousemove
     }else if(TOOL_MANAGER.cur_selected == "sample"){
       TOOL_MANAGER.sampleColor(x,y);
     }
@@ -82,7 +82,11 @@ function onmousemove(evt){
     return;
   }
 
-  if (TOOL_MANAGER.cur_selected == "paint" && bButtonPressed) {
+  if (  (
+          TOOL_MANAGER.cur_selected === "paint" 
+          || TOOL_MANAGER.cur_selected === "erase"
+        )
+        && bButtonPressed) {
     let dims = PIXEL_MANAGER.getDimensions();
     var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
     x -= dims.image_offset_x + DRAW_MANAGER.position.x;
@@ -91,9 +95,13 @@ function onmousemove(evt){
     var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
     y -= dims.image_offset_y + DRAW_MANAGER.position.y;
     y = Math.floor(y/dims.box_width);
-
-    PIXEL_MANAGER.alterPixel(x,y);
-    DRAW_MANAGER.draw();
+    if(TOOL_MANAGER.cur_selected == "paint") {
+      PIXEL_MANAGER.alterPixel(x,y);
+      DRAW_MANAGER.draw();
+    } else if(TOOL_MANAGER.cur_selected === "erase") {
+      PIXEL_MANAGER.erasePixel(x,y);
+    }
+    
   } else {
     var x = Math.floor((evt.pageX - canvas.offsetLeft)/BOX_WIDTH);
     var y = Math.floor((evt.pageY - canvas.offsetTop)/BOX_WIDTH);
@@ -140,9 +148,11 @@ function onmousedown(evt){
   y -= dims.image_offset_y + DRAW_MANAGER.position.y;
   y = Math.floor(y/dims.box_width);
 
-  if (TOOL_MANAGER.cur_selected == "paint" && bButtonPressed) {
+  if (TOOL_MANAGER.cur_selected === "paint" && bButtonPressed) {
     PIXEL_MANAGER.alterPixel(x,y);
     DRAW_MANAGER.draw();
+  } else if (TOOL_MANAGER.cur_selected === "erase" && bButtonPressed) {
+    PIXEL_MANAGER.erasePixel(x,y);
   }
 }
 function onmouseup(evt){
