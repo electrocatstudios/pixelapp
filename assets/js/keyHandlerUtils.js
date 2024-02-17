@@ -177,16 +177,16 @@ function ontouchstart(e){
   y -= dims.image_offset_y + DRAW_MANAGER.position.y;
   y = Math.floor(y/dims.box_width);
 
-  if(TOOL_MANAGER.cur_selected == "paint"){
+  if(TOOL_MANAGER.cur_selected == "paint") {
     PIXEL_MANAGER.alterPixel(x,y);
     DRAW_MANAGER.draw();
   } else if(TOOL_MANAGER.cur_selected == "fill") {
     // Call the fill function but not the start pixel
     let startPixel = PIXEL_MANAGER.getPixelAt(x,y);
     PIXEL_MANAGER.fillPixel(x,y,startPixel);
-  }else if(TOOL_MANAGER.cur_selected == "erase"){
+  } else if(TOOL_MANAGER.cur_selected == "erase") {
     PIXEL_MANAGER.erasePixel(x,y);
-  } else if(TOOL_MANAGER.cur_selected == "sample"){
+  } else if(TOOL_MANAGER.cur_selected == "sample") {
     TOOL_MANAGER.sampleColor(x,y);
   }
 }
@@ -195,7 +195,28 @@ function ontouchmove(e){
   let touch = e.touches[0];
   let diff_x = (touch.pageX - canvas.offsetLeft);
   let diff_y = (touch.pageY - canvas.offsetTop);
-  handlemove(diff_x, diff_y);
+  if(TOOL_MANAGER.cur_selected === "move") {
+    handlemove(diff_x, diff_y);
+  } else if( 
+    TOOL_MANAGER.cur_selected === "paint" 
+    || TOOL_MANAGER.cur_selected === "erase" 
+  ){
+    let dims = PIXEL_MANAGER.getDimensions();
+    var x = touch.pageX - canvas.offsetLeft; // Position on the canvas X
+    x -= dims.image_offset_x + DRAW_MANAGER.position.x;
+    x = Math.floor(x/dims.box_width);
+  
+    var y = touch.pageY - canvas.offsetTop;// Position on the canvas Y
+    y -= dims.image_offset_y + DRAW_MANAGER.position.y;
+    y = Math.floor(y/dims.box_width);
+     
+    if (TOOL_MANAGER.cur_selected === "paint" && bButtonPressed) {
+      PIXEL_MANAGER.alterPixel(x,y);
+      DRAW_MANAGER.draw();
+    } else if (TOOL_MANAGER.cur_selected === "erase" && bButtonPressed) {
+      PIXEL_MANAGER.erasePixel(x,y);
+    }
+  }
   // console.log(touch);
   e.preventDefault();
 }
