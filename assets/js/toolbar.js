@@ -158,13 +158,15 @@ function position_color_bar_picker(){
 
 var paint_tools_showing = false;
 function reveal_paint_tools() {
-    console.log("Toggling paint tools");
     paint_tools_showing = !paint_tools_showing;
     if(paint_tools_showing){
         $('#paint_tools_selection').removeClass("paint_tools_selection_hide");
+        let pos = $('#pixel_toolbar').position();
+        $('#paint_tools_selection').css({"top": pos.top + "px", "left": (pos.left - 70) + "px"});
     } else {
         $('#paint_tools_selection').addClass("paint_tools_selection_hide");
     }
+
 }
 
 
