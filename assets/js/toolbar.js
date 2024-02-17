@@ -136,9 +136,9 @@ function click_menu_item(item_name){
     TOOL_MANAGER.clickMenuItem(item_name);
     // TODO: Display Icon instead of TEXT
     if(item_name == "paint"){
-        $('#toolbar_reveal').html("P");
+        $('#toolbar_reveal').html("<img src=\"/img/icons/paint.png\">");
     }else if(item_name == "fill"){
-        $('#toolbar_reveal').html("F");
+        $('#toolbar_reveal').html("<img src=\"/img/icons/fill.png\">");
     }
 }
 
