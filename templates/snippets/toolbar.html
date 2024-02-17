@@ -1,21 +1,12 @@
 <div id='pixel_toolbar'>
     <div 
-        id='toolbar_button_paint' 
+        id='toolbar_reveal' 
         class='toolbar_item toolbar_item_selected' 
-        onmouseover='hover_menu_item("paint");'
+        onclick="reveal_paint_tools()"
+        onmouseover='hover_menu_item("Select Paint Tools");'
         onmouseout='hover_menu_exit();'
-        onclick='click_menu_item("paint");' 
     >
-        P
-    </div>
-    <div 
-        id='toolbar_button_fill' 
-        class='toolbar_item' 
-        onmouseover='hover_menu_item("fill");'
-        onmouseout='hover_menu_exit();'
-        onclick='click_menu_item("fill");' 
-    >
-        F
+        <img src="/img/icons/paint.png">
     </div>
     <div 
         id='toolbar_button_erase' 
@@ -24,7 +15,7 @@
         onmouseover='hover_menu_item("erase");'
         onmouseout='hover_menu_exit();'
     >
-        E
+        <img src="/img/icons/erase.png">
     </div>
 
     <div 
@@ -34,7 +25,7 @@
         onmouseover='hover_menu_item("move");'
         onmouseout='hover_menu_exit();'
     >
-        M
+        <img src="/img/icons/move.png">
     </div>
 
     <div 
@@ -44,13 +35,45 @@
         onmouseover='hover_menu_item("sample");'
         onmouseout='hover_menu_exit();'
     >
-        S
+        <img src="/img/icons/sample.png">
     </div>
     <!-- <div id='toolbar_button_view' class='toolbar_item' onclick='click_menu_item("view")'>V</div> -->
     <div id='toolbar_button_color' class='toolbar_item' onclick='click_menu_item("color")'>
         <div id='toolbar_color_show'></div>
     </div>
     <!--<div id='toolbar_button_zoom_minus' class='toolbar_item' onclick='click_menu_item("zoom_minus")'>-</div> -->
+</div>
+
+<div id="paint_tools_selection" class="paint_tools_selection_hide">
+    <div
+        id="toolbar_button_paint"
+        class='toolbar_item paint'
+        onmouseover='hover_menu_item("paint");'
+        onmouseout='hover_menu_exit();'
+        onclick='click_menu_item("paint");reveal_paint_tools()' 
+    >
+        <!-- TODO: Add in paint icon -->
+        <img src="/img/icons/paint.png">
+    </div>
+    <div 
+        id='toolbar_button_fill' 
+        class='toolbar_item' 
+        onmouseover='hover_menu_item("fill");'
+        onmouseout='hover_menu_exit();'
+        onclick='click_menu_item("fill");reveal_paint_tools()' 
+    >
+        <!-- TODO: Add in fill icon -->
+        <img src="/img/icons/fill.png">
+    </div>
+    <div
+        id="close_paint_tools_selection"
+        class='toolbar_item' 
+        onmouseover='hover_menu_item("Close Tool Selection");'
+        onmouseout='hover_menu_exit();'
+        onclick='reveal_paint_tools()'
+    >
+        X
+    </div> 
 </div>
 
 <div id='pixel_zoom_buttons'>
@@ -156,6 +179,11 @@
                 user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
 
+    }
+    .toolbar_item:hover{
+        transition:all 0.3s ease;
+        cursor: pointer;
+        background-color:#525252;
     }
     .zoom_toolbar_item{
         display:inline-block;
@@ -296,6 +324,17 @@
         right: 20px;
         top:70px;
     }
+
+    #paint_tools_selection{
+        /* display:none; */
+        position: absolute;
+        background-color: #a0a0a0;
+        border-radius: 5px;
+    }
+
+    .paint_tools_selection_hide{
+        display: none;
+    }
 </style>
 
-<script type='text/javascript' src='/js/toolbar.js'></script>
+<script type='text/javascript' src='/js/toolbar.js?t=123'></script>

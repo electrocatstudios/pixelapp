@@ -134,6 +134,12 @@ function set_new_alpha(val){
 // Support function should be handled by the tool manager
 function click_menu_item(item_name){
     TOOL_MANAGER.clickMenuItem(item_name);
+    // TODO: Display Icon instead of TEXT
+    if(item_name == "paint"){
+        $('#toolbar_reveal').html("<img src=\"/img/icons/paint.png\">");
+    }else if(item_name == "fill"){
+        $('#toolbar_reveal').html("<img src=\"/img/icons/fill.png\">");
+    }
 }
 
 function hover_menu_item(item_name){
@@ -149,6 +155,20 @@ function position_color_bar_picker(){
     var screen_width = $(document).width();
     $('#toolbar_color_picker').css({'left': (screen_width/2) + ((GAME_SIZE.x/2) - 200 - 80) + 'px','top': 70 + "px"});
 }
+
+var paint_tools_showing = false;
+function reveal_paint_tools() {
+    paint_tools_showing = !paint_tools_showing;
+    if(paint_tools_showing){
+        $('#paint_tools_selection').removeClass("paint_tools_selection_hide");
+        let pos = $('#pixel_toolbar').position();
+        $('#paint_tools_selection').css({"top": pos.top + "px", "left": (pos.left - 70) + "px"});
+    } else {
+        $('#paint_tools_selection').addClass("paint_tools_selection_hide");
+    }
+
+}
+
 
 function select_layer(layer){
     $('#toolbar_select_button_background').removeClass("toolbar_color_button_selected");
