@@ -52,14 +52,11 @@ function PixelManagerLoadData(pixel_id){
     //       xhr.setRequestHeader ("Authorization", "Bearer " + token);
     //   },
       success: function(ret){
-        // console.log(ret)
-;
         if(ret.status != "ok"){
             // console.log(ret.message);
             $('#error').html(ret.message);
             return;
         }
-        console.log(ret);
         
         let _box_width = BOX_WIDTH * TOOL_MANAGER.scale;
         
@@ -104,14 +101,13 @@ function PixelManagerLoadData(pixel_id){
               return;
           }
           let _box_width = BOX_WIDTH * TOOL_MANAGER.scale;
-      
           var max_frame = 0;
           for(var i=0;ret.shaders != null && i<ret.shaders.length;i++){
               var s = ret.shaders[i];
               
               // setPixel(p.x, p.y, p.r, p.g, p.b, p.alpha, 1, p.layer, p.frame);
               if(s.frame > PIXEL_MANAGER.max_frame){
-                  PIXEL_MANAGER.max_frame = p.frame;
+                  PIXEL_MANAGER.max_frame = s.frame;
               }
 
               if(PIXEL_MANAGER.shader_layer[s.frame] == undefined){
