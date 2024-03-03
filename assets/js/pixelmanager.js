@@ -361,30 +361,62 @@ function PixelManagerNewFrame(){
     var pix_width = parseInt(window.picture_width/window.pixel_size);
     var pix_height = parseInt(window.picture_height/window.pixel_size);
     
-    // Set up the new line
-    var new_line = new Array(pix_height).fill(null);
-    for(i=0;i<pix_height;i++){
-        new_line[i] = new Array(pix_width).fill(null);;
-    }
-
-    // Copy previous selected frame
-    for(var y=0;y<new_line.length;y++){
-        for(var x=0;x<new_line[y].length;x++){
-            var p = this.saved_image_data[DRAW_MANAGER.cur_frame][y][x];
-            if(p != null){
-                var pixel = {
-                    r: p.r,
-                    g: p.g,
-                    b: p.b,
-                    alpha: p.alpha
-                }
-                new_line[y][x] = pixel;
-            } 
+    {
+        // Pixels
+        // Set up the new line
+        var new_line = new Array(pix_height).fill(null);
+        for(i=0;i<pix_height;i++){
+            new_line[i] = new Array(pix_width).fill(null);;
         }
+
+        // Copy previous selected frame
+        for(var y=0;y<new_line.length;y++){
+            for(var x=0;x<new_line[y].length;x++){
+                var p = this.saved_image_data[DRAW_MANAGER.cur_frame][y][x];
+                if(p != null){
+                    var pixel = {
+                        r: p.r,
+                        g: p.g,
+                        b: p.b,
+                        alpha: p.alpha
+                    }
+                    new_line[y][x] = pixel;
+                }
+
+            }
+        }
+
+        this.saved_image_data.splice(DRAW_MANAGER.cur_frame+1,0,new_line);
+    
     }
 
-    this.saved_image_data.splice(DRAW_MANAGER.cur_frame+1,0,new_line);
+    {
+        // Shaders
+        var new_line = new Array(pix_height).fill(null);
+        for(i=0;i<pix_height;i++){
+            new_line[i] = new Array(pix_width).fill(null);;
+        }
 
+        // Copy previous selected frame
+        for(var y=0;y<new_line.length;y++){
+            for(var x=0;x<new_line[y].length;x++){
+                var p = this.shader_layer[DRAW_MANAGER.cur_frame][y][x];
+                if(p != null){
+                    var pixel = {
+                        r: p.r,
+                        g: p.g,
+                        b: p.b,
+                        alpha: p.alpha
+                    }
+                    new_line[y][x] = pixel;
+                }
+
+            }
+        }
+
+        this.shader_layer.splice(DRAW_MANAGER.cur_frame+1,0,new_line);
+    }
+    
     // Move to the newly created frame
     DRAW_MANAGER.cur_frame += 1;
 }
