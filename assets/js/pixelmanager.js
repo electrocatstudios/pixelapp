@@ -35,11 +35,15 @@ function PixelManagerLoadData(pixel_id){
     let numX = window.picture_width/window.pixel_size;
     let numY = window.picture_height/window.pixel_size;
     this.saved_image_data[0] = [];
+    this.shader_layer[0] = [];
+
     for(let y=0;y<numY;y++){
         this.saved_image_data[0].push([]);
+        this.shader_layer[0].push([]);
         // console.log(this.saved_image_data);
         for(let x=0;x<numX;x++){
             this.saved_image_data[0][y].push(null);
+            this.shader_layer[0][y].push(null);
         }
     }
 
