@@ -65,6 +65,7 @@ function PixelManagerLoadData(pixel_id){
         let _box_width = BOX_WIDTH * TOOL_MANAGER.scale;
         
         var max_frame = 0;
+        console.log(ret);
         for(var i=0;ret.pixels != null && i<ret.pixels.length;i++){
             var p = ret.pixels[i];
             
@@ -402,22 +403,24 @@ function PixelManagerNewFrame(){
         }
 
         // Copy previous selected frame
-        for(var y=0;y<new_line.length;y++){
-            for(var x=0;x<new_line[y].length;x++){
-                var p = this.shader_layer[DRAW_MANAGER.cur_frame][y][x];
-                if(p != null){
-                    var pixel = {
-                        r: p.r,
-                        g: p.g,
-                        b: p.b,
-                        alpha: p.alpha
+        if(this.shader_layer[DRAW_MANAGER.cur_frame] !== null){
+            for(var y=0;y<new_line.length;y++){
+                for(var x=0;x<new_line[y].length;x++){
+                    var p = this.shader_layer[DRAW_MANAGER.cur_frame][y][x];
+                    if(p != null){
+                        var pixel = {
+                            r: p.r,
+                            g: p.g,
+                            b: p.b,
+                            alpha: p.alpha
+                        }
+                        new_line[y][x] = pixel;
                     }
-                    new_line[y][x] = pixel;
-                }
 
+                }
             }
         }
-
+        
         this.shader_layer.splice(DRAW_MANAGER.cur_frame+1,0,new_line);
     }
     
