@@ -276,6 +276,13 @@ function new_frame(){
   TOOL_MANAGER.refreshFrameButtons();
 }
 
+function delete_frame() {
+  PIXEL_MANAGER.deleteFrame();
+
+  // Make sure buttons reflect actual frames
+  TOOL_MANAGER.refreshFrameButtons();
+}
+
 function toggle_animation(){
   DRAW_MANAGER.animatepreview = !DRAW_MANAGER.animatepreview;
   if(DRAW_MANAGER.animatepreview){

@@ -12,6 +12,7 @@ function PixelManager(){
 
     this.getNumberFrames = PixelManagerGetNumberFrames;
     this.newFrame = PixelManagerNewFrame;
+    this.deleteFrame = PixelManagerDeleteFrame;
     this.getPixelData = PixelManagerGetPixelData;
     this.getShaderData = PixelManagerGetShaderData;
 
@@ -420,12 +421,18 @@ function PixelManagerNewFrame(){
                 }
             }
         }
-        
+
         this.shader_layer.splice(DRAW_MANAGER.cur_frame+1,0,new_line);
     }
     
     // Move to the newly created frame
     DRAW_MANAGER.cur_frame += 1;
+}
+
+function PixelManagerDeleteFrame() {
+    this.saved_image_data.splice(DRAW_MANAGER.cur_frame,1);
+    this.shader_layer.splice(DRAW_MANAGER.cur_frame,1);
+    
 }
 
 function PixelManagerGetDimensions(){
