@@ -3,7 +3,7 @@ use warp::{filters::BoxedFilter, Filter, Reply, Rejection};
 use serde_json::json;
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::{queries,models::{PixelImageDesc,SavePixel,IncomingPixel,IncomingShader,DuplicateImageData,PixelSaveFile,PixelResizeData}};
+use crate::db::{models::{DuplicateImageData, IncomingPixel, IncomingShader, NewCollectionData, PixelImageDesc, PixelResizeData, PixelSaveFile, SavePixel}, queries};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST routes
@@ -63,6 +63,13 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(resize_image_impl);
 
+    // POST /api/collection
+    let create_collection = warp::post()
+        .and(warp::path!("api" / "collection"))
+        .and(json_body_for_new_collection())
+        .and(db_conn.clone())
+        .and_then(create_collection_impl);
+
     heartbeat_post
         .or(create_new_pixel)
         .or(save_pixels)
@@ -70,6 +77,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(duplicate_image)
         .or(newfromfile)
         .or(resize_image)
+        .or(create_collection)
         .or(default)
         .boxed()
 }
@@ -96,6 +104,11 @@ fn json_body_newfromfile() ->  impl Filter<Extract = (PixelSaveFile,), Error = w
 }
 
 fn json_body_for_resize() -> impl Filter<Extract = (PixelResizeData,), Error = warp::Rejection> + Clone {
+    warp::body::content_length_limit(1024 * 16)
+        .and(warp::body::json())
+}
+
+fn json_body_for_new_collection() -> impl Filter<Extract = (NewCollectionData,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(1024 * 16)
         .and(warp::body::json())
 }
@@ -474,3 +487,22 @@ async fn resize_image_impl(guid: String, newsize: PixelResizeData, db_pool: Pool
     }
 
 }
+
+async fn create_collection_impl(collection_name: String, db_pool: Pool<Sqlite> ) -> Result<Box<dyn Reply>, Rejection> {
+    match queries::create_collection(collection_name, &mut db_pool.clone()).await {
+        Ok(_) => {
+            Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "ok", "message": ""}))
+                )
+            )
+        },
+        Err(err) => {
+            log::error!("Error creating collection: {}", err.to_string());
+            Err(
+                warp::reject::not_found()
+            )
+        }
+    }
+}
+

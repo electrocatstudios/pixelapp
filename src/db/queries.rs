@@ -107,6 +107,35 @@ pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) ->
     }
 }
 
+pub async fn get_collection_by_name(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<String, DBError> {
+    match sqlx::query_as::<_,Collection>(
+        "SELECT * FROM collection WHERE name=$1"
+    )
+    .bind(collection_name)
+    .fetch_all(&*pool).await {
+        Ok(coll) => Ok(coll),
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
+pub async fn create_collection(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match get_collection_by_name(collection_name, &mut pool.clone()).await {
+        Ok(_) => {
+            let err_str = format!("Collection {} already exists", collection_name);
+            return Err(DBError::AlreadyExists(err_str))
+        },
+        Err(_) => {}
+    }
+    match sqlx::query_as::<_,PixelPixel>(
+        "INSERT INTO collection (name) VALUES $1"
+    )
+    .bind(collection_name)
+    .execute(&*pool).await {
+        Ok(_) => Ok(()),
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
 pub async fn get_pixels_for_image(image_id: i32, frame: i32, layer: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<PixelPixel>, DBError> {
     let pixels = match sqlx::query_as::<_,PixelPixel>(
         "SELECT * FROM pixel WHERE image_id=$1 AND layer=$2 AND frame=$3"

@@ -29,6 +29,12 @@ pub struct DuplicateImageData {
     pub newimagename: String
 }
 
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct Collection {
+    pub id: i32,
+    pub name: String,
+    pub creator: Option<String>
+}
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct PixelPixel {
@@ -101,6 +107,11 @@ pub struct IncomingPixel {
     pub frame: i32,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct NewCollectionData {
+    pub collection_name: String
+}
+
 impl IncomingPixel {
     pub fn from_pixel_pixel(pixel: &PixelPixel) -> Self {
         IncomingPixel {
@@ -153,12 +164,6 @@ impl IncomingShader {
     }
 }
 
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
-pub struct Collection {
-    pub id: i32,
-    pub name: String,
-    pub creator: Option<String>
-}
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct Palette {

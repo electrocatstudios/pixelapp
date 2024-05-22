@@ -13,6 +13,7 @@ const DB_CONN_STRING: &str = "sqlite://pixel.db";
 pub enum DBError {
     DatabaseError(String),
     UnknownError(String),
+    AlreadyExists(String),
     NoneFound
 }
 
@@ -21,6 +22,7 @@ impl fmt::Display for DBError {
         match self {
             DBError::DatabaseError(err_str) => write!(f, "DatabaseError: {}", err_str),
             DBError::UnknownError(err_str) => write!(f, "UnknownError: {}", err_str),
+            DBError::AlreadyExists(err_str) => write!(f, "Already Exists: {}", err_str),
             DBError::NoneFound => write!(f, "No result found")
         }
     }
