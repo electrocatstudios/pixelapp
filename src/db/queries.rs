@@ -71,6 +71,10 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
         
     let toolbar: String = fs::read_to_string("templates/snippets/toolbar.html").unwrap().parse().unwrap();
     let menubar: String = fs::read_to_string("templates/snippets/menubar.html").unwrap().parse().unwrap();
+    let coll_id = match pixel.collection_id {
+        Some(id) => format!("{}", id),
+        None => "null".to_string()
+    };    
     let ret = &json!({
         "name": &pixel.name,
         "width": &pixel.width,
@@ -78,7 +82,8 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
         "pixelwidth": &pixel.pixelwidth,
         "guid": &pixel.guid,
         "toolbar": &toolbar,
-        "menubar": &menubar
+        "menubar": &menubar,
+        "collection_id": &coll_id
     });
 
     Ok(ret.clone())
@@ -98,13 +103,14 @@ pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<
 pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
     match sqlx::query(
         "UPDATE pixelimage SET name=$1, description=$2, \
-        width=$3, height=$4, pixelwidth=$5 WHERE id=$6"
+        width=$3, height=$4, pixelwidth=$5, collection_id=$6 WHERE id=$7"
     )
     .bind(pixel.name)
     .bind(pixel.description)
     .bind(pixel.width)
     .bind(pixel.height)
     .bind(pixel.pixelwidth)
+    .bind(pixel.collection_id)
     .bind(pixel.id)
     .execute(&*pool).await {
         Ok(_) => Ok(()),

@@ -14,6 +14,9 @@ $(document).ready(function () {
     $('#height_selector').val(window.picture_height);
     $('#pixel_width_display').val(window.pixel_size);
     $('#backgroundcolor').val("#000000");
+
+    // $.ajax() - TODO: Get list of collections and select the one matching
+    // The pixel collection id (window.collection_id)
 });
 
 var applicationMenuShown = false;
@@ -81,9 +84,15 @@ function update_details(){
 
     var width = $('#width_selector').val();
     var height = $('#height_selector').val();
+    var collection = $('#collection').val();
+    
     var data = {
         width: parseInt(width),
         height: parseInt(height)
+    }
+
+    if(collection !== undefined && collection !== null && collection !== 0){
+        data.collection = collection;
     }
 
     var url='/api/size/' + window.pixel_id;

@@ -93,7 +93,8 @@ pub struct PixelSaveFile {
 #[derive(Serialize, Deserialize)]
 pub struct PixelResizeData {
     pub width: u32,
-    pub height: u32
+    pub height: u32,
+    pub collection: Option<i32>
 }
 
 #[derive(Serialize, Deserialize)]

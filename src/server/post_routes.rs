@@ -469,6 +469,10 @@ async fn resize_image_impl(guid: String, newsize: PixelResizeData, db_pool: Pool
 
     pixel.width = newsize.width as i32;
     pixel.height = newsize.height as i32;
+    match newsize.collection {
+        Some(id) => pixel.collection_id = Some(id),
+        None => {}
+    }
 
     match queries::update_pixel_details(pixel, &mut db_pool.clone()).await {
         Ok(_) => {
