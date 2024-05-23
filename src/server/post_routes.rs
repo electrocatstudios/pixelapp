@@ -304,10 +304,10 @@ async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, 
         None => None
     };
 
-    let new_coll: Option<String> = match old_pixel.collection_id {
+    let new_coll: Option<i32> = match old_pixel.collection_id {
         Some(coll) => {
             match queries::get_collection_by_id(coll, &mut db_pool.clone()).await {
-                Ok(c) => Some(c.name),
+                Ok(c) => Some(c.id),
                 Err(err) => {
                     log::warn!("{}", err.to_string());
                     None
