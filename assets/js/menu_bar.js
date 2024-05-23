@@ -15,8 +15,39 @@ $(document).ready(function () {
     $('#pixel_width_display').val(window.pixel_size);
     $('#backgroundcolor').val("#000000");
 
-    // $.ajax() - TODO: Get list of collections and select the one matching
-    // The pixel collection id (window.collection_id)
+    // Show the selected collection
+    var url = "/api/collection";
+    $.ajax({
+        url: url,
+        type: 'GET',
+        dataType: 'json',
+        success: function(ret){
+            if(ret.status != "ok"){
+                $('#error').html(ret.message);
+                return;
+            }
+            var output = "<select id='sel_collection'><option>--All--</option>";
+            for(var i=0;i<ret.collections.length;i++){
+                var c = ret.collections[i];
+                output += "<option value='" + c.id + "'";
+                if(c.id == window.collection_id) {
+                    output += " selected";
+                }
+
+                if(c.name === ""){
+                    output += ">[None]</option>"
+                } else {
+                    output += ">" + c.name + "</option>"
+                }
+            }
+            output += "</select>";
+            $('#sel_coll').html(output);
+        },
+        error: function(ret){
+            console.log("Error getting saved pixels")
+            console.log(ret)
+        }
+    })
 });
 
 var applicationMenuShown = false;
@@ -84,7 +115,7 @@ function update_details(){
 
     var width = $('#width_selector').val();
     var height = $('#height_selector').val();
-    var collection = $('#collection').val();
+    var collection = $('#sel_collection').val();
     
     var data = {
         width: parseInt(width),
@@ -92,9 +123,9 @@ function update_details(){
     }
 
     if(collection !== undefined && collection !== null && collection !== 0){
-        data.collection = collection;
+        data.collection = parseInt(collection);
     }
-
+    
     var url='/api/size/' + window.pixel_id;
     $.ajax({
         url: url,

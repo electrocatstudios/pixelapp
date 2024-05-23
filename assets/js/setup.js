@@ -15,7 +15,11 @@ $(document).ready(function(){
             var output = "<select id='sel_collection'><option val='0'>--No Collection--</option>";
             for(var i=0;i<ret.collections.length;i++){
                 var c = ret.collections[i];
-                output += "<option val='" + c.id + "'>" + c.name + "</option>"
+                if(c.name === ""){
+                    output += "<option value='" + c.id + "'>[None]</option>"
+                } else {
+                    output += "<option value='" + c.id + "'>" + c.name + "</option>"
+                }
 
             }
             output += "</select>";

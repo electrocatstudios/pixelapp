@@ -34,7 +34,7 @@ $(document).ready(function(){
                 $('#error').html(ret.message);
                 return;
             }
-            var output = "<select id='sel_collection' onchange='refresh_image_list()'><option>--All--</option>";
+            var output = "<select id='sel_collection' onchange='refresh_image_list()'><option value='show_all'>--All--</option>";
             for(var i=0;i<ret.collections.length;i++){
                 var c = ret.collections[i];
                 if(c.name === ""){
@@ -45,6 +45,7 @@ $(document).ready(function(){
             }
             output += "</select>";
             $('#coll_container').html(output);
+            refresh_image_list();
         },
         error: function(ret){
             console.log("Error getting saved pixels")
@@ -65,7 +66,7 @@ function refresh_image_list() {
     for(var i=0;i<image_list.length;i++){
         var p = image_list[i];
         
-        if(sel_collection !== undefined && sel_collection !== null && p.collection_id != sel_collection){
+        if(sel_collection !== "show_all" && p.collection_id != sel_collection){
             console.log(sel_collection, p.collection_id);
             continue;
         }
