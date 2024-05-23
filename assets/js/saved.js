@@ -1,4 +1,5 @@
 var image_list = [];
+var search_prompt = "";
 
 $(document).ready(function(){
 
@@ -70,7 +71,10 @@ function refresh_image_list() {
             console.log(sel_collection, p.collection_id);
             continue;
         }
-
+        if(search_prompt !== "" && !p.name.includes(search_prompt)) {
+            continue;
+        }
+        
         output += "<div class='row choose_menu_items'>"
         // output += "<a href='/pixelapp/" + p.id + "'>"
         output += "<div class='column choose_menu_item'>" + p.name + "<br>" + p.description + "<br>";
@@ -140,4 +144,11 @@ function delete_pixel(pid){
             console.log(ret);
         }
       })
+}
+
+function update_search_prompt() {
+    var val = $('#search').val();
+    search_prompt = val;
+
+    refresh_image_list();
 }
