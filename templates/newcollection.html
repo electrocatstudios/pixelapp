@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <title>New Collection</title>
+        <link rel='stylesheet' href='/css/pixelapp.css'>
+        <link rel='stylesheet' href='/css/font.css'>
+        <link href='/css/skeleton.css' rel='stylesheet'>
+
+        <script src="/js/jquery.min.js"></script>
+        <script src='/js/collections.js'></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    </head>
+    <body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>
+        <div class='container'>
+            <div id='error' class='row' style='color: red;'>
+            </div>
+        </div>
+        <!-- Heading -->
+        <div class='container'>
+            <div class='row'>
+                <div id='message_banner' style='text-align:center'>
+                    <h1>New Collection</h1>
+                </div>
+            </div>
+
+            <div class="row choose_menu_items">
+                <div class='choose_menu_item'>
+                <input id='collection' placeholder='Collection Name' type='text'>
+            </div>
+            <div class='choose_menu_item' onclick='create_collection()'>
+                Create      
+            </div>
+            <div class="row choose_menu_items">
+                <a href='/'>
+                    <div class='choose_menu_item choose_menu_item_button'>
+                        Back
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </body>
+</html>

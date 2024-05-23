@@ -488,8 +488,8 @@ async fn resize_image_impl(guid: String, newsize: PixelResizeData, db_pool: Pool
 
 }
 
-async fn create_collection_impl(collection_name: String, db_pool: Pool<Sqlite> ) -> Result<Box<dyn Reply>, Rejection> {
-    match queries::create_collection(collection_name, &mut db_pool.clone()).await {
+async fn create_collection_impl(collection: NewCollectionData, db_pool: Pool<Sqlite> ) -> Result<Box<dyn Reply>, Rejection> {
+    match queries::create_collection(collection.collection_name, &mut db_pool.clone()).await {
         Ok(_) => {
             Ok(
                 Box::new(

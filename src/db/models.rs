@@ -18,7 +18,7 @@ pub struct PixelImage {
 pub struct PixelImageDesc {
     pub name: String,
     pub description: Option<String>,
-    pub collection: Option<String>,
+    pub collection: Option<i32>,
     pub width: i32,
     pub height: i32,
     pub pixelwidth: i32

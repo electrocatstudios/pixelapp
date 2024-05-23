@@ -1,11 +1,33 @@
-// let token = null;
-// $(document).ready(function(){
-//     token = getToken();
-//     if(token == null){
-//         window.location.href='/login?ret=pixelapp%2fnew'
-//         return;
-//     }
-// })
+$(document).ready(function(){
+    var url = "/api/collection";
+    $.ajax({
+        url: url,
+        type: 'GET',
+        dataType: 'json',
+        // beforeSend: function (xhr) {
+        //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+        // },
+        success: function(ret){
+            if(ret.status != "ok"){
+                $('#error').html(ret.message);
+                return;
+            }
+            var output = "<select id='sel_collection'><option val='0'>--No Collection--</option>";
+            for(var i=0;i<ret.collections.length;i++){
+                var c = ret.collections[i];
+                output += "<option val='" + c.id + "'>" + c.name + "</option>"
+
+            }
+            output += "</select>";
+
+            $('#coll_container').html(output);
+        },
+        error: function(ret){
+            console.log("Error getting saved pixels")
+            console.log(ret)
+        }
+    })
+})
 
 function create_picture(){
     $('#error').html("");
@@ -15,8 +37,11 @@ function create_picture(){
     var width = $('#imgwidth').val();
     var height = $('#imgheight').val();
     var pixelwidth = $('#pixelwidth').val();
-    var collection = $('#collection').val();
-    
+    var collection = $('#sel_collection').val();
+    if(collection === 0) {
+        collection = null;
+    }
+
     if(name == undefined || name == null || name == ""){
         $('#error').html("Name cannot be blank");
         return;

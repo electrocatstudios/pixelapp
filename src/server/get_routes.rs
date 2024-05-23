@@ -1,4 +1,4 @@
-use std::fs;
+use std::{collections, fs};
 use serde_json::json;
 
 use handlebars::Handlebars;
@@ -46,6 +46,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     // Get /new - get the page for creating a new pixel image
     let new_image_page = warp::path("new").map(|| {
         let body: String = fs::read_to_string("templates/setuppixel.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_1", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_1", &json!({})).unwrap()
+        )
+    });
+
+    // GET /new_collection - get the new collection page
+    let new_collection_page = warp::path("new_collection").map(|| {
+        let body: String = fs::read_to_string("templates/newcollection.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_1", body).unwrap();
         warp::reply::html(
@@ -139,6 +149,12 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_save_file_impl);
         
+    // GET /api/collection - get the list of collections
+    let get_collection_list = warp::path!("api" / "collection")
+        .and(db_conn.clone())
+        .and_then(get_collection_list_impl);
+
+
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -160,10 +176,12 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_render_single)
         .or(load_render_page)
         .or(pixel_page)
+        .or(new_collection_page)
         .or(get_pixel_list_route)
         .or(get_pixel_details)
         .or(get_image_pixel_list)
         .or(get_image_shader_list)
+        .or(get_collection_list)
         .or(get_rendered_spritesheet)
         .or(get_save_file)
         .or(get_gif_render)
@@ -212,6 +230,23 @@ async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejecti
         )
     )
 } 
+
+async fn get_collection_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    match queries::get_collections(&mut db_pool.clone()).await {
+        Ok(collections) => Ok(
+            Box::new(
+                warp::reply::json(&json!({"status": "ok", "message": "", "collections": collections}))
+            )
+        ),
+        Err(err) => {
+            Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    }
+}
 
 async fn get_pixel_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {

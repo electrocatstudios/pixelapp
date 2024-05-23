@@ -11,13 +11,21 @@ use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShad
 
 pub async fn get_pixel_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<PixelImage>, DBError> {
     // Do the actual request to get the list
-    let pixels = match sqlx::query_as::<_,PixelImage>(
-                        "SELECT * FROM pixelimage"
-                    ).fetch_all(&*pool).await {
-                        Ok(pix) => pix,
-                        Err(err) => return Err(DBError::UnknownError(err.to_string()))
-                    };
-    Ok(pixels)
+    match sqlx::query_as::<_,PixelImage>(
+        "SELECT * FROM pixelimage"
+    ).fetch_all(&*pool).await {
+        Ok(pix) => Ok(pix),
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
+pub async fn get_collections(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<Collection>, DBError> {
+    match sqlx::query_as::<_,Collection>(
+        "SELECT * FROM collection" 
+    ).fetch_all(&*pool).await {
+        Ok(colls) => Ok(colls),
+        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    }
 }
 
 pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> Result<String, DBError> {
@@ -25,14 +33,11 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
     let guid: String = format!("{:?}", Uuid::new_v4());
     
     let collection_id = match data.collection {
-        Some(name) => { 
-            match get_collection_by_name(name.clone(), &mut pool.clone()).await {
+        Some(id) => { 
+            match get_collection_by_id(id, &mut pool.clone()).await {
                 Ok(collection) => Some(collection.id),
-                Err(_) => {
-                    match make_new_collection(name, &mut pool.clone()).await {
-                        Ok(id) => Some(id),
-                        Err(err) => return Err(err)
-                    }
+                Err(err) => {
+                    return Err(DBError::DatabaseError(err.to_string()));
                 }
             }
         },
@@ -107,27 +112,17 @@ pub async fn update_pixel_details(pixel: PixelImage, pool: &mut Pool<Sqlite>) ->
     }
 }
 
-pub async fn get_collection_by_name(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<String, DBError> {
-    match sqlx::query_as::<_,Collection>(
-        "SELECT * FROM collection WHERE name=$1"
-    )
-    .bind(collection_name)
-    .fetch_all(&*pool).await {
-        Ok(coll) => Ok(coll),
-        Err(err) => return Err(DBError::UnknownError(err.to_string()))
-    }
-}
 
 pub async fn create_collection(collection_name: String, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
-    match get_collection_by_name(collection_name, &mut pool.clone()).await {
+    match get_collection_by_name(collection_name.clone(), &mut pool.clone()).await {
         Ok(_) => {
             let err_str = format!("Collection {} already exists", collection_name);
             return Err(DBError::AlreadyExists(err_str))
         },
         Err(_) => {}
     }
-    match sqlx::query_as::<_,PixelPixel>(
-        "INSERT INTO collection (name) VALUES $1"
+    match sqlx::query(
+        "INSERT INTO collection (name) VALUES ($1)"
     )
     .bind(collection_name)
     .execute(&*pool).await {
