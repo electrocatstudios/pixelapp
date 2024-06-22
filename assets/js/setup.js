@@ -12,7 +12,7 @@ $(document).ready(function(){
                 $('#error').html(ret.message);
                 return;
             }
-            var output = "<select id='sel_collection'><option val='0'>--No Collection--</option>";
+            var output = "<select id='sel_collection'><option value='0'>--No Collection--</option>";
             for(var i=0;i<ret.collections.length;i++){
                 var c = ret.collections[i];
                 if(c.name === ""){
@@ -54,7 +54,7 @@ function create_picture(){
     var data = {
         name: name,
         description: desc,
-        collection: collection,
+        collection: parseInt(collection),
         width: parseInt(width),
         height: parseInt(height),
         pixelwidth: parseInt(pixelwidth)
