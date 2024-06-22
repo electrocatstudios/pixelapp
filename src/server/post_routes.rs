@@ -22,7 +22,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
             warp::reply::json(&json!({"status": "fail", "message": "Unknown route"}))
         });
 
-    // POST /api/pixel - get list of pixels
+    // POST /api/new - create new pixel
     let create_new_pixel = warp::post()
         .and(warp::path!("api" / "new"))
         .and(json_body_new_pixel())
