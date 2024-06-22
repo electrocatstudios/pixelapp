@@ -33,11 +33,15 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
     let guid: String = format!("{:?}", Uuid::new_v4());
     
     let collection_id = match data.collection {
-        Some(id) => { 
-            match get_collection_by_id(id, &mut pool.clone()).await {
-                Ok(collection) => Some(collection.id),
-                Err(err) => {
-                    return Err(DBError::DatabaseError(err.to_string()));
+        Some(id) => {
+            if id == 0 {
+                None
+            } else {
+                match get_collection_by_id(id, &mut pool.clone()).await {
+                    Ok(collection) => Some(collection.id),
+                    Err(err) => {
+                        return Err(DBError::DatabaseError(err.to_string()));
+                    }
                 }
             }
         },
