@@ -1,4 +1,4 @@
-use std::{collections, fs};
+use std::fs;
 use serde_json::json;
 
 use handlebars::Handlebars;
