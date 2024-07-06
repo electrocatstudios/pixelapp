@@ -679,7 +679,7 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
 
     for pix in pixels.iter() {
         let mut color = Rgba([pix.r as u8, pix.g as u8, pix.b as u8, (pix.alpha * 255.0) as u8 ]);         
-        match queries::get_shader_for_image_at_point(pixel.id, 0, pix.x, pix.y, &mut db_pool.clone()).await {
+        match queries::get_shader_for_image_at_point(pixel.id, frame as i32, pix.x, pix.y, &mut db_pool.clone()).await {
             Ok(shad) => {
                 // log::info!("Found a pixel shader");
                 let shader_col = Rgba([shad.r as u8, shad.g as u8, shad.b as u8, (shad.alpha * 255.0) as u8]);
