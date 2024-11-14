@@ -22,16 +22,21 @@ let DRAW_MANAGER = null;
 function performResize(){
     GAME_SIZE = {
         x: window.innerWidth-20,
-        y: window.innerHeight - 90
+        y: window.innerHeight - 90,
+        mobile: false
     }
 
-    if(window.picture_width != undefined){
-        GAME_SIZE.x = window.picture_width;
-       
+    if(window.picture_width != undefined && window.picture_width < window.innerWidth-20 ){
+        GAME_SIZE.x = window.picture_width;   
+    } else if (window.picture_width != undefined && window.picture_width >= window.innerWidth-20){
+        GAME_SIZE.x = window.innerWidth-20;
+        GAME_SIZE.mobile = true;
     }
+
     if(window.picture_height != undefined){
         GAME_SIZE.y = window.picture_height;
-       
+        // TODO: Take into account screen height minus components
+        // Should be able to resize canvas to fit components without having to scroll
     }
     if(GAME_SIZE.x < GAME_SIZE_MIN.x){
       GAME_SIZE.x = GAME_SIZE_MIN.x;

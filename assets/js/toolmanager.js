@@ -27,14 +27,16 @@ function ToolManagerUpdate(){
 
 function ToolManagerClickMenuItem(item_name){
     // Make sure the buttons aren't selected
-    $('#toolbar_reveal').removeClass("toolbar_item_selected");
-    $('#toolbar_button_paint').removeClass("toolbar_item_selected");
-    $('#toolbar_button_fill').removeClass("toolbar_item_selected");
-    $('#toolbar_button_erase').removeClass("toolbar_item_selected");
-    $('#toolbar_button_move').removeClass("toolbar_item_selected");
-    $('#toolbar_button_view').removeClass("toolbar_item_selected");
-    $('#toolbar_button_color').removeClass("toolbar_item_selected");
-    $('#toolbar_button_sample').removeClass("toolbar_item_selected");
+    if(item_name != 'zoom_plus' && item_name !== 'zoom_minus'){
+        $('#toolbar_reveal').removeClass("toolbar_item_selected");
+        $('#toolbar_button_paint').removeClass("toolbar_item_selected");
+        $('#toolbar_button_fill').removeClass("toolbar_item_selected");
+        $('#toolbar_button_erase').removeClass("toolbar_item_selected");
+        $('#toolbar_button_move').removeClass("toolbar_item_selected");
+        $('#toolbar_button_view').removeClass("toolbar_item_selected");
+        $('#toolbar_button_color').removeClass("toolbar_item_selected");
+        $('#toolbar_button_sample').removeClass("toolbar_item_selected");
+    }
     
     if(item_name == "zoom_plus"){
         if(this.scale == 0.5) {

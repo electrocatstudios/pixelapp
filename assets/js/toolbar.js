@@ -1,12 +1,20 @@
 $(document).ready(function(){
     var screen_width = $(document).width();
-    $('#pixel_toolbar').css({'left': ((screen_width/2) + (GAME_SIZE.x/2) + 10) + "px", "top":"70px" });
+    if (GAME_SIZE.mobile) {
+        $('#pixel_toolbar').css({'right': 20 + "px", "top":"70px" });
+    } else {
+        $('#pixel_toolbar').css({'left': ((screen_width/2) + (GAME_SIZE.x/2) + 10) + "px", "top":"70px" });
+    }
     $('#pixel_zoom_buttons').css({'left': (screen_width/2) + ((GAME_SIZE.x/2) - 105) + 'px','top': (GAME_SIZE.y + 75) + "px"});
    
     // View buttons
     var view_button_left = (($(document).width()/2) - (GAME_SIZE.x/2) - 50) ;
-    $('#toolbar_view_select').css({'left': view_button_left + 'px', 'top': 70 + "px"});
-
+    if (GAME_SIZE.mobile) {
+        $('#toolbar_view_select').css({'left': 5 + 'px', 'top': 70 + "px"});
+    } else {
+        $('#toolbar_view_select').css({'left': view_button_left + 'px', 'top': 70 + "px"});
+    }
+    
     $('#color_bar_red').click(function(evt){
         let posY = evt.pageY - $(this).offset().top;
         let val = parseInt(((200-posY) / 200) * 255);
