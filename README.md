@@ -9,8 +9,8 @@ requires a database to store the data, which will allow persistence. At some poi
 make a version available online but this is quite a while away (as of time of writing).
 
 ## History
-This application was originally written in Go but this is a rewrite in Rust. The original
-code was taken from a larger project so may not compile on it's own. 
+This application was originally written in Go but this is a rewrite in Rust. The `original`
+code folder was taken from a larger project so may not compile on it's own. 
 
 ## Running the application
 To run the application use
@@ -22,6 +22,6 @@ Note: You can leave the port off, the default is `8888`
 ## Roadmap
 The current roadmap of items I'll be working on.
 
-[] Rewrite original as working application
+[x] Rewrite original as working application
 [] Convert PNG to pixellated version
 
