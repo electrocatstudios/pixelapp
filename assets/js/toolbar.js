@@ -1,7 +1,7 @@
 $(document).ready(function(){
     var screen_width = $(document).width();
     if (GAME_SIZE.mobile) {
-        $('#pixel_toolbar').css({'right': 20 + "px", "top":"70px" });
+        $('#pixel_toolbar').css({'right': 5 + "px", "top":"70px" });
     } else {
         $('#pixel_toolbar').css({'left': ((screen_width/2) + (GAME_SIZE.x/2) + 10) + "px", "top":"70px" });
     }
