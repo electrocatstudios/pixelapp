@@ -24,4 +24,8 @@ The current roadmap of items I'll be working on.
 
 [x] Rewrite original as working application
 [] Convert PNG to pixellated version
+[] Ability to backup/restore db to file
+[] Export pixels in json format
+[] Import pixels in json format
+[] Well defined json format
 

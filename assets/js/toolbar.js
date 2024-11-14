@@ -137,8 +137,10 @@ function click_menu_item(item_name){
     // TODO: Display Icon instead of TEXT
     if(item_name == "paint"){
         $('#toolbar_reveal').html("<img src=\"/img/icons/paint.png\">");
+        $('#toolbar_reveal').addClass('toolbar_item_selected');
     }else if(item_name == "fill"){
         $('#toolbar_reveal').html("<img src=\"/img/icons/fill.png\">");
+        $('#toolbar_reveal').addClass('toolbar_item_selected');
     }
 }
 
