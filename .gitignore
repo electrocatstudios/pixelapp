@@ -115,3 +115,5 @@ pixel.db*
 
 
 .DS_Store
+
+temp/
