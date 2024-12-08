@@ -41,10 +41,7 @@ function performResize(){
 
     $('#canvas').width(GAME_SIZE.x);
     $('#canvas').height(GAME_SIZE.y);
-    var screen_width = $(document).width();
-    var offset_left = (screen_width/2) - (GAME_SIZE.x/2);
-    $('#canvas').css({'margin-left':  offset_left + "px"})
-   
+    
     if(canvas != null){
         canvas.width = GAME_SIZE.x;
         canvas.height = GAME_SIZE.y;

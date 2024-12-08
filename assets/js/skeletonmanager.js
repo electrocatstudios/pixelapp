@@ -2,9 +2,11 @@ function SkeletonManager() {
     this.draw = SkeletonManagerDraw;
     this.update = SkeletonManagerUpdate;
     this.add_animation_limb = SkeletonManagerAddAnimationLimb;
-
+    this.refresh = SkeletonManagerRefresh;
     this.limb_current = [];
     this.limb_list = [];
+
+    this.selected = null;
 }
 
 function SkeletonManagerAddAnimationLimb(x,y,rot,length,color, name) {
@@ -12,6 +14,39 @@ function SkeletonManagerAddAnimationLimb(x,y,rot,length,color, name) {
     this.limb_list.push(
         new AnimationLimb(name, color, first_pos)
     );
+    this.refresh()
+}
+
+function SkeletonManagerRefresh() {
+    // Refresh the views - limb lists and positions etc
+
+    // First the drop down list
+    var output = "<select id='limb_list' onchange='new_limb_selected()'>"
+    output += "<option value='none'>--Select A Limb--</option>";
+    for(var i=0;i<this.limb_list.length;i++){
+        var l = this.limb_list[i];
+        output += "<option value='" + l.name + "'";
+        if(this.selected === l.name) {
+            output += "selected";
+        }
+        output += ">" + l.name + "</option>"
+    }
+    output += "</select>"
+    $('#limb_select').html(output);
+
+    // Second get the moves list
+    // TODO: Get the moves list and show it
+}
+
+function new_limb_selected() {
+    var val = $('#limb_list').val();
+    if(val === "none") {
+        SKELETON_MANAGER.selected = null;
+    } else {
+        SKELETON_MANAGER.selected = val;
+    }
+    // console.log(SKELETON_MANAGER.selected);
+    SKELETON_MANAGER.refresh();
 }
 
 function SkeletonManagerDraw(ctx) {
