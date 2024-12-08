@@ -100,6 +100,7 @@ pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>
         "name": "test_name".to_string(),
         "width": 200,
         "height": 400,
+        "length": 2000,
         "guid": guid.clone(),
         "menubar": &menubar
     });

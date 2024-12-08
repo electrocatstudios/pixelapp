@@ -5,7 +5,8 @@ var canvas = null; // The main drawing area
 var canvas_out = null;
 var ctx_out = null;
 
-var currentTime = 0; // For debugging - you can store the current time and see how it's changed
+var currentTime = 0; // Track where we are in the animation loop
+var animationLength = null;
 var GAME_SIZE = {} ;
 var GAME_SIZE_MIN = {x: 300, y: 500}
 var OUT_SIZE = {};
@@ -50,6 +51,7 @@ function performResize(){
     }
 
     SKELETON_MANAGER = new SkeletonManager();
+    animationLength = window.animation_length;
 }
 
 
@@ -75,11 +77,17 @@ var PREVIEW_COOLDOWN_MAX = 5;
 var preview_cooldown = PREVIEW_COOLDOWN_MAX;
 
 function update(){
-  // Do update stuff
+    if (animationLength === null) {
+        return;
+    } 
 
-  // Store the time - for debugging purposes mostly
-  currentTime += SECONDSBETWEENFRAMES;
+    // Store the time - for debugging purposes mostly
+    currentTime += SECONDSBETWEENFRAMES;
+    if (currentTime >= animationLength) {
+        currentTime -= animationLength
+    }
 
-  // Clear the drawing area
+
+    // Clear the drawing area
 
 }
