@@ -93,6 +93,20 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
     Ok(ret.clone())
 }
 
+pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
+    // TODO: Get saved values from DB
+    let menubar: String = fs::read_to_string("templates/snippets/animation_menubar.html").unwrap().parse().unwrap();
+    let ret = &json!({
+        "name": "test_name".to_string(),
+        "width": 200,
+        "height": 400,
+        "guid": guid.clone(),
+        "menubar": &menubar
+    });
+
+    Ok(ret.clone())
+}
+
 pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<PixelImage, DBError> {
     match sqlx::query_as::<_,PixelImage>(
         "SELECT * FROM pixelimage WHERE guid=$1"
