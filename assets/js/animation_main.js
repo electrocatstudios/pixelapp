@@ -1,4 +1,4 @@
-var FPS = 5; // target frames per second
+var FPS = 30; // target frames per second
 var SECONDSBETWEENFRAMES = 1 / FPS;
 var ctx = null; // Useful to have a global reference for measuring fonts for instance
 var canvas = null; // The main drawing area
@@ -52,6 +52,11 @@ function performResize(){
 
     SKELETON_MANAGER = new SkeletonManager();
     animationLength = window.animation_length;
+
+    SKELETON_MANAGER.add_animation_limb(100, 100, 0.0, 50, "#ffff00", "first_test_limb");
+    
+    SKELETON_MANAGER.limb_list[0].add_position(100, 100, 1.0, 50, 0.5);
+    SKELETON_MANAGER.limb_list[0].add_position(100, 100, 0.0, 50, 1.0);
 }
 
 
@@ -83,11 +88,17 @@ function update(){
 
     // Store the time - for debugging purposes mostly
     currentTime += SECONDSBETWEENFRAMES;
-    if (currentTime >= animationLength) {
-        currentTime -= animationLength
+    if (currentTime >= (animationLength / 1000)) {
+        currentTime -= (animationLength / 1000);
     }
 
-
     // Clear the drawing area
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
 
+    ctx.fillRect(0,0,GAME_SIZE.x,GAME_SIZE.y);
+    
+    // Update then draw the limbs
+    SKELETON_MANAGER.update(currentTime / (animationLength / 1000));
+    SKELETON_MANAGER.draw(ctx);
 }
