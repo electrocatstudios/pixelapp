@@ -6,16 +6,36 @@ function AnimationLimb(name, col, startPos, parent){
     this.parent = parent;
 
     this.add_position = AnimationLimbAddPosition;
+    this.update_position = AnimationLimbUpdatePosition;
     this.remove_position = AnimationLimbDelPosition;
     this.get_first = function() { return this.moves_list[0] };
+
 }
 
 function AnimationLimbAddPosition(x, y, rot, length, perc) {
     this.moves_list.push(new AnimationLimbPosition(x, y, rot, length, perc));
 }
 
-function AnimationLimbDelPosition(index) {
-    this.moves_list = this.moves_list.splice(index, 1);
+function AnimationLimbDelPosition(idx) {
+    if(idx < 0 || idx >= this.moves_list.length) {
+        console.log("ERROR: We've been passed an index out of range while updating the limb");
+        return;
+    }
+    this.moves_list.splice(idx, 1); // this.moves_list = t
+    SKELETON_MANAGER.refresh();
+}
+
+function AnimationLimbUpdatePosition(idx, x, y, rot, length, perc) {
+    if(idx < 0 || idx >= this.moves_list.length) {
+        console.log("ERROR: We've been passed an index out of range while updating the limb");
+        return;
+    }
+    this.moves_list[idx].x = x;
+    this.moves_list[idx].y = y;
+    this.moves_list[idx].rot = rot;
+    this.moves_list[idx].length = length;
+    this.moves_list[idx].perc = perc;
+    SKELETON_MANAGER.refresh();
 }
 
 function AnimationLimbPosition(x, y, rot, length, perc) {

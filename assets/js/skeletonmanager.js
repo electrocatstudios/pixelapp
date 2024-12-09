@@ -6,6 +6,8 @@ function SkeletonManager() {
     this.limb_current = [];
     this.limb_list = [];
 
+    this.update_limb_move = SkeletonManagerUpdateLimbMove;
+    this.delete_limb_move = SkeletonManagerRemoveLimbMove;
     this.selected = null;
 }
 
@@ -62,11 +64,11 @@ function SkeletonManagerRefresh() {
 
 function get_move_card(mov, idx){
     var ret = "<div class='move_card'>"
-    ret += "X: <input type'number' name='move_x_" + idx + "' id='move_x_" + idx + "' value='" + mov.x + "'>";
-    ret += "Y: <input type'number' name='move_y_" + idx + "' id='move_y_" + idx + "' value='" + mov.y + "'>";
-    ret += "Rotation: <input type'number' name='move_rot_" + idx + "' id='move_rot_" + idx + "' value='" + mov.rot + "'>";
-    ret += "Length: <input type'number' name='move_length_" + idx + "' id='move_length_" + idx + "' value='" + mov.length + "'>";
-    ret += "Perc: <input type'number' name='move_perc_" + idx + "' id='move_perc_" + idx + "' value='" + mov.perc + "'>";
+    ret += "X: <input type'number' id='move_x_" + idx + "' value='" + mov.x + "'>";
+    ret += "Y: <input type'number' id='move_y_" + idx + "' value='" + mov.y + "'>";
+    ret += "Rotation: <input type'number' id='move_rot_" + idx + "' value='" + mov.rot + "'>";
+    ret += "Length: <input type'number' id='move_length_" + idx + "' value='" + mov.length + "'>";
+    ret += "Perc: <input type'number' id='move_perc_" + idx + "' value='" + mov.perc + "'>";
     ret += "<button onclick='update_limb_move(" + idx + ")'>Update</button>";
     ret += "<button onclick='delete_limb_move(" + idx + ")'>Delete</button>";
     ret += "</div>"
@@ -232,4 +234,51 @@ function add_new_limb() {
 function close_new_limb() {
     $('#limb_add_box').addClass('limb_add_box_closed');
     limb_add_box_open = false;
+}
+
+function update_limb_move(idx) {
+    SKELETON_MANAGER.update_limb_move(idx);
+}
+
+function delete_limb_move(idx) {
+    SKELETON_MANAGER.delete_limb_move(idx);
+}
+
+function SkeletonManagerUpdateLimbMove(idx) {
+    if(this.selected === null) {
+        console.log("No limb selected");
+        return;
+    }
+
+    // Get the updated values
+    var x = $('#move_x_' + idx).val();
+    x = parseFloat(x);
+    var y = $('#move_y_' + idx).val();
+    y = parseFloat(y);
+    var rot = $('#move_rot_' + idx).val();
+    rot = parseFloat(rot);
+    var length = $('#move_length_' + idx).val();
+    length = parseFloat(length);
+    var perc = $('#move_perc_' + idx).val();
+    perc = parseFloat(perc);
+    
+    for(var i=0;i<this.limb_list.length;i++) {
+        var limb = this.limb_list[i];
+        if(limb.name === this.selected) {
+            limb.update_position(idx, x, y, rot, length, perc);
+        }
+    }
+}
+
+function SkeletonManagerRemoveLimbMove(idx) {
+    if(this.selected === null) {
+        console.log("No limb selected");
+        return;
+    }
+    for(var i=0;i<this.limb_list.length;i++) {
+        var limb = this.limb_list[i];
+        if(limb.name === this.selected) {
+            limb.remove_position(idx);
+        }
+    }
 }
