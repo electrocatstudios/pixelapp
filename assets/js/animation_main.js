@@ -50,7 +50,7 @@ function performResize(){
     SKELETON_MANAGER = new SkeletonManager();
     animationLength = window.animation_length;
 
-    SKELETON_MANAGER.add_animation_limb(100, 100, 0.0, 50, "#ffff00", "first_test_limb");
+    SKELETON_MANAGER.add_animation_limb(100, 100, 0.0, 50, "#ffff00", "first_test_limb", null);
     
     SKELETON_MANAGER.limb_list[0].add_position(100, 100, 1.0, 50, 0.5);
     SKELETON_MANAGER.limb_list[0].add_position(100, 100, 0.0, 50, 1.0);
@@ -83,7 +83,7 @@ var preview_cooldown = PREVIEW_COOLDOWN_MAX;
 function update(){
     if (animationLength === null) {
         return;
-    } 
+    }
 
     // Store the time - for debugging purposes mostly
     currentTime += SECONDSBETWEENFRAMES;
@@ -96,7 +96,7 @@ function update(){
     ctx.save();
 
     ctx.fillRect(0,0,GAME_SIZE.x,GAME_SIZE.y);
-    
+
     // Update then draw the limbs
     SKELETON_MANAGER.update(currentTime / (animationLength / 1000));
     SKELETON_MANAGER.draw(ctx);

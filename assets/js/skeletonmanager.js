@@ -9,10 +9,10 @@ function SkeletonManager() {
     this.selected = null;
 }
 
-function SkeletonManagerAddAnimationLimb(x,y,rot,length,color, name) {
+function SkeletonManagerAddAnimationLimb(x,y,rot,length,color, name, parent) {
     var first_pos = new AnimationLimbPosition(x, y , rot, length, 0.0);
     this.limb_list.push(
-        new AnimationLimb(name, color, first_pos)
+        new AnimationLimb(name, color, first_pos, parent)
     );
     this.refresh()
 }
@@ -84,8 +84,24 @@ function SkeletonManagerUpdate(delta) {
     this.limb_current = [];
 
     for(var i=0;i<this.limb_list.length;i++){
+        // Find parent location
+        var nxt_adjust = {x: 0, y: 0};
+        if(this.limb_list[i].parent !== null){
+            for(var j=0;j<this.limb_current.length;j++){
+                if(this.limb_current[j].parent === this.limb_list[i].parent) {
+                    var cur_move = this.limb_current[j].get_first();
+                    nxt_adjust.x = cur_move.get_end_x();
+                    nxt_adjust.y = cur_move.get_end_y();
+                    break;
+                }
+            }
+        }
+
         if(this.limb_list[i].moves_list.length < 2) {
-            var nxt = new AnimationLimb("draw_item_" + i, this.limb_list[i].color, this.limb_list[i].get_first());
+            let next_limb_pos = this.limb_list[i].get_first().copy();
+            next_limb_pos.x += nxt_adjust.x;
+            next_limb_pos.y += nxt_adjust.y
+            var nxt = new AnimationLimb("draw_item_" + i, this.limb_list[i].color, next_limb_pos, this.limb_list[i].name);
             this.limb_current.push(nxt);
         } else {
             // Calculate where in the scale we are. 
@@ -97,16 +113,16 @@ function SkeletonManagerUpdate(delta) {
                 if(prev_limb.perc < delta && next_limb.perc > delta) {
                     // Where we fall in between the two points
                     var perc = (delta - prev_limb.perc) / (next_limb.perc - prev_limb.perc);
-                    // x, y, rot, length, perc
+                    // Args are: x, y, rot, length, perc
                     var nxt_limb = new AnimationLimbPosition(
-                        prev_limb.x + (perc * (next_limb.x - prev_limb.x)),
-                        prev_limb.y + (perc * (next_limb.y - prev_limb.y)),
+                        nxt_adjust.x + prev_limb.x + (perc * (next_limb.x - prev_limb.x)),
+                        nxt_adjust.y + prev_limb.y + (perc * (next_limb.y - prev_limb.y)),
                         prev_limb.rot + (perc * (next_limb.rot - prev_limb.rot)),
                         prev_limb.length + (perc * (next_limb.length - prev_limb.length)),
                         perc
                     )
 
-                    var nxt = new AnimationLimb("draw_item_" + i, this.limb_list[i].color, nxt_limb);
+                    var nxt = new AnimationLimb("draw_item_" + i, this.limb_list[i].color, nxt_limb, this.limb_list[i].name);
                     this.limb_current.push(nxt);
                 }
             }
@@ -128,6 +144,9 @@ function submit_new_limb() {
     // Check null vals
     if(name === undefined || name === null || name === "") {
         $('#new_limb_error').html("Name cannot be empty");
+        return;
+    } else if (name.toLowerCase() === "none") {
+        $('#new_limb_error').html("Name cannot be 'none'");
         return;
     }
     if(x === undefined || x === null) {
@@ -156,7 +175,12 @@ function submit_new_limb() {
         $('#new_limb_error').html("One or more values are not valid numbers");
     }
 
-    SKELETON_MANAGER.add_animation_limb(x,y,rot,length,color,name);
+    var parent = $('#parent_selector').val();
+    if(parent === 'none'){
+        parent = null;
+    }
+
+    SKELETON_MANAGER.add_animation_limb(x,y,rot,length,color,name, parent);
 
     $('#new_limb_name').val("");
     $('#new_limb_x').val("");
