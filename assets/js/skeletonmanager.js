@@ -21,8 +21,8 @@ function SkeletonManagerRefresh() {
     // Refresh the views - limb lists and positions etc
 
     // First the drop down list
-    var output = "<select id='limb_list' onchange='new_limb_selected()'>"
-    output += "<option value='none'>--Select A Limb--</option>";
+    
+    var output = "<select id='limb_list' onchange='new_limb_selected()'><option value='none'>--Select A Limb--</option>";
     for(var i=0;i<this.limb_list.length;i++){
         var l = this.limb_list[i];
         output += "<option value='" + l.name + "'";
@@ -33,6 +33,14 @@ function SkeletonManagerRefresh() {
     }
     output += "</select>"
     $('#limb_select').html(output);
+
+    var parent_output = "<select id='parent_selector'><option value='none'>--None--</option>";
+    for(var i=0;i<this.limb_list.length;i++){
+        var l = this.limb_list[i];
+        parent_output += "<option value='" + l.name + "'>" + l.name + "</option>";
+    }
+    parent_output += "</select>"
+    $('#limb_add_parent').html(parent_output);
 
     // Second get the moves list
     // TODO: Get the moves list and show it
@@ -104,4 +112,73 @@ function SkeletonManagerUpdate(delta) {
             }
         }
     }
+}
+
+function submit_new_limb() {
+    // Called from HTML to submit a new limb
+    $('#new_limb_error').html("");
+
+    var name = $('#new_limb_name').val();
+    var x = $('#new_limb_x').val();
+    var y = $('#new_limb_y').val();
+    var rot = $('#new_limb_rot').val();
+    var length = $('#new_limb_length').val();
+    var color = $('#new_limb_color').val();
+
+    // Check null vals
+    if(name === undefined || name === null || name === "") {
+        $('#new_limb_error').html("Name cannot be empty");
+        return;
+    }
+    if(x === undefined || x === null) {
+        $('#new_limb_error').html("X value required");
+        return;
+    }
+    if(y === undefined || y === null) {
+        $('#new_limb_error').html("Y value required");
+        return;
+    }
+    if(length === undefined || length === null) {
+        $('#new_limb_error').html("Length value required");
+        return;
+    }
+    if(rot === undefined || rot === null) {
+        rot = 0;
+    }
+
+    // Check values are correct type
+    try {
+        x = parseFloat(x);
+        y = parseFloat(y);
+        length = parseFloat(length);
+        rot = parseFloat(rot);
+    } catch (err) {
+        $('#new_limb_error').html("One or more values are not valid numbers");
+    }
+
+    SKELETON_MANAGER.add_animation_limb(x,y,rot,length,color,name);
+
+    $('#new_limb_name').val("");
+    $('#new_limb_x').val("");
+    $('#new_limb_y').val("");
+    $('#new_limb_rot').val("");
+    $('#new_limb_length').val("");
+    $('#new_limb_color').val("");
+    close_new_limb();
+}
+
+var limb_add_box_open = false;
+
+function add_new_limb() {
+    limb_add_box_open = !limb_add_box_open;
+    if(limb_add_box_open){
+        $('#limb_add_box').removeClass('limb_add_box_closed');
+    } else {
+        $('#limb_add_box').addClass('limb_add_box_closed');
+    }
+}
+
+function close_new_limb() {
+    $('#limb_add_box').addClass('limb_add_box_closed');
+    limb_add_box_open = false;
 }

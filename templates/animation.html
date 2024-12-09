@@ -8,6 +8,7 @@
     <title>Pixel App | Animation Manager</title>
 
     <link href='/css/website.css' rel='stylesheet'>
+    <link href="/css/animation.css" rel="stylesheet">
     <link href='/css/skeleton.css' rel='stylesheet'>
 
     <script type='text/javascript' src='/js/animation_main.js'></script>
@@ -42,6 +43,18 @@
     <div style="text-align: center;">
         <span id="limb_select"></span>
         <button onclick="add_new_limb()">Add Limb</button>
+        <div id="limb_add_box" class="limb_add_box">
+            <div id="new_limb_error" style="color:red"></div>
+            <input id='new_limb_name' placeholder="name"><br>
+            <input id='new_limb_x' placeholder="X" type="number"><br>
+            <input id='new_limb_y' placeholder="Y" type="number"><br>
+            <input id='new_limb_rot' placeholder="Rotation" type="number"><br>
+            <input id='new_limb_length' placeholder="Length" type="number"><br>
+            <input id="new_limb_color" type="color"><br>
+            <div id="limb_add_parent"></div>
+            <button onclick="submit_new_limb()">Submit</button>
+            <button onclick="close_new_limb()">Close</button>
+        </div>
     </div>
     <div style="text-align: center;">
         

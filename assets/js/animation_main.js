@@ -63,6 +63,8 @@ $(document).ready(function(){
       $('#animation_name').html(window.animation_name);
     }
 
+    $('#limb_add_box').addClass('limb_add_box_closed');
+
     // Do set up
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
