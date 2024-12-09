@@ -56,6 +56,7 @@ function SkeletonManagerRefresh() {
                 var mov = limb.moves_list[j];
                 output += get_move_card(mov, j);
             }
+            output += get_new_move_card();
             $('#limb_positions').html(output);
             break;
         }
@@ -71,6 +72,18 @@ function get_move_card(mov, idx){
     ret += "Perc: <input type'number' id='move_perc_" + idx + "' value='" + mov.perc + "'>";
     ret += "<button onclick='update_limb_move(" + idx + ")'>Update</button>";
     ret += "<button onclick='delete_limb_move(" + idx + ")'>Delete</button>";
+    ret += "</div>"
+    return ret;
+}
+
+function get_new_move_card() {
+    var ret = "<div class='move_card'>"
+    ret += "X: <input type'number' id='move_x_new' placeholder='X'>";
+    ret += "Y: <input type'number' id='move_y_new' placeholder='Y'>";
+    ret += "Rotation: <input type'number' id='move_rot_new' placeholder='Rot'>";
+    ret += "Length: <input type'number' id='move_length_new' placeholder='Length'>";
+    ret += "Perc: <input type'number' id='move_perc_new' placeholder='Perc'>";
+    ret += "<button onclick='new_limb_move()'>Add</button>";
     ret += "</div>"
     return ret;
 }
@@ -244,6 +257,10 @@ function delete_limb_move(idx) {
     SKELETON_MANAGER.delete_limb_move(idx);
 }
 
+function new_limb_move() {
+    SKELETON_MANAGER.update_limb_move("new");
+}
+
 function SkeletonManagerUpdateLimbMove(idx) {
     if(this.selected === null) {
         console.log("No limb selected");
@@ -265,7 +282,11 @@ function SkeletonManagerUpdateLimbMove(idx) {
     for(var i=0;i<this.limb_list.length;i++) {
         var limb = this.limb_list[i];
         if(limb.name === this.selected) {
-            limb.update_position(idx, x, y, rot, length, perc);
+            if(idx === "new"){
+                limb.add_position(x, y, rot, length, perc);
+            } else {
+                limb.update_position(idx, x, y, rot, length, perc);
+            }
         }
     }
 }

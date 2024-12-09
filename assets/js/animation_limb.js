@@ -14,6 +14,8 @@ function AnimationLimb(name, col, startPos, parent){
 
 function AnimationLimbAddPosition(x, y, rot, length, perc) {
     this.moves_list.push(new AnimationLimbPosition(x, y, rot, length, perc));
+    this.moves_list.sort((a, b) => a.perc - b.perc)
+    SKELETON_MANAGER.refresh();
 }
 
 function AnimationLimbDelPosition(idx) {
