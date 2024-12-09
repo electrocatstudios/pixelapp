@@ -29,7 +29,6 @@ function performResize(){
 
     if(window.picture_height != undefined){
         GAME_SIZE.y = window.picture_height;
-        // TODO: Take into account screen height minus components
         // Should be able to resize canvas to fit components without having to scroll
     }
     if(GAME_SIZE.x < GAME_SIZE_MIN.x){

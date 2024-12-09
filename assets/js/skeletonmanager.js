@@ -43,7 +43,34 @@ function SkeletonManagerRefresh() {
     $('#limb_add_parent').html(parent_output);
 
     // Second get the moves list
-    // TODO: Get the moves list and show it
+    if (self.selected === null){
+        return;
+    }
+    for(var i=0;i<this.limb_list.length;i++){
+        if(this.limb_list[i].name === this.selected){
+            var limb = this.limb_list[i];
+            var output = ""
+            for(var j=0;j<limb.moves_list.length;j++){
+                var mov = limb.moves_list[j];
+                output += get_move_card(mov, j);
+            }
+            $('#limb_positions').html(output);
+            break;
+        }
+    }
+}
+
+function get_move_card(mov, idx){
+    var ret = "<div class='move_card'>"
+    ret += "X: <input type'number' name='move_x_" + idx + "' id='move_x_" + idx + "' value='" + mov.x + "'>";
+    ret += "Y: <input type'number' name='move_y_" + idx + "' id='move_y_" + idx + "' value='" + mov.y + "'>";
+    ret += "Rotation: <input type'number' name='move_rot_" + idx + "' id='move_rot_" + idx + "' value='" + mov.rot + "'>";
+    ret += "Length: <input type'number' name='move_length_" + idx + "' id='move_length_" + idx + "' value='" + mov.length + "'>";
+    ret += "Perc: <input type'number' name='move_perc_" + idx + "' id='move_perc_" + idx + "' value='" + mov.perc + "'>";
+    ret += "<button onclick='update_limb_move(" + idx + ")'>Update</button>";
+    ret += "<button onclick='delete_limb_move(" + idx + ")'>Delete</button>";
+    ret += "</div>"
+    return ret;
 }
 
 function new_limb_selected() {

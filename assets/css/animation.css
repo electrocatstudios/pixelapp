@@ -16,3 +16,18 @@
     padding-top: 0px;
     
 }
+
+.move_card {
+    margin-top:10px;
+    padding-top: 10px;
+    background-color: rgb(237, 224, 189);
+    border-radius: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    color: rgb(19, 18, 18);
+}
+
+.move_card input {
+    width: 40px;
+    margin-right: 5px;
+}
