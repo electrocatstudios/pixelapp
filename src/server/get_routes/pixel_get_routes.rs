@@ -13,7 +13,7 @@ use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 use crate::utils::{color_to_hex_string,hex_string_to_color};
 use crate::image::gif;
 
-use super::query_params::{RenderQuery, GifRenderQuery};
+use crate::server::query_params::{RenderQuery, GifRenderQuery};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     let cors = warp::cors()
