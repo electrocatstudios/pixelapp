@@ -434,7 +434,7 @@ pub async fn get_collection_by_id(collection_id: i32, pool: &mut Pool<Sqlite>) -
     Ok(collection)
 }
 
-pub async fn make_new_collection(name: String, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
+pub async fn _make_new_collection(name: String, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
     // Check if already exists
     match get_collection_by_name(name.clone(), &mut pool.clone()).await {
         Ok(c) => {

@@ -153,12 +153,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_collection_list = warp::path!("api" / "collection")
         .and(db_conn.clone())
         .and_then(get_collection_list_impl);
-    
-    // GET /api/animation - get the list of animations
-    let get_animation_list = warp::path!("api" / "animation")
-        .and(db_conn.clone())
-        .and_then(get_animation_list_impl);
-
+ 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -272,17 +267,6 @@ async fn get_collection_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply
     }
 }
 
-async fn get_animation_list_impl(_db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    Ok(
-        Box::new(
-            warp::reply::json(&json!(
-                {
-                    "status": "ok"
-                }
-            ))
-        )
-    )
-}
 
 async fn get_pixel_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {

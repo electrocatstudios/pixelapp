@@ -2,8 +2,8 @@ use std::fs;
 use serde_json::json;
 
 use handlebars::Handlebars;
-use warp::{Filter, filters::BoxedFilter, Reply};
-use sqlx::SqlitePool;
+use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
+use sqlx::{Pool, Sqlite, SqlitePool};
 
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
@@ -17,5 +17,27 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
-    new_animation_page.boxed()
+   
+    // GET /api/animation - get the list of animations
+    let get_animation_list = warp::path!("api" / "animation")
+        .and(db_conn.clone())
+        .and_then(get_animation_list_impl);
+
+
+    new_animation_page
+        .or(get_animation_list)
+        .boxed()
+}
+
+
+async fn get_animation_list_impl(_db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    Ok(
+        Box::new(
+            warp::reply::json(&json!(
+                {
+                    "status": "ok"
+                }
+            ))
+        )
+    )
 }
