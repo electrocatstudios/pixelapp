@@ -93,7 +93,7 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
     Ok(ret.clone())
 }
 
-pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
+pub async fn get_animation_details_as_json(guid: String, _pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
     // TODO: Get saved values from DB
     let menubar: String = fs::read_to_string("templates/snippets/animation_menubar.html").unwrap().parse().unwrap();
     let ret = &json!({
