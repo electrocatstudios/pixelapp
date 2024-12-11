@@ -16,23 +16,7 @@ use crate::image::gif;
 use crate::server::query_params::{RenderQuery, GifRenderQuery};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
-    let cors = warp::cors()
-    .allow_any_origin().allow_methods(&[warp::http::Method::GET, warp::http::Method::POST]);
-
-    let heartbeat = warp::path!("heartbeat")
-        .map(|| format!("ok"))
-        .with(cors);
-    
-    // GET 404 - catch all
-    let default = warp::any().map(|| {
-        let body: String = fs::read_to_string("templates/404.html").unwrap().parse().unwrap();
-        let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("tpl_1", body).unwrap();
-        warp::reply::html(
-            handlebars.render("tpl_1", &json!({})).unwrap()
-        )
-    });
-
+   
     // GET /home - get the main front page
     let home = warp::path::end().map(|| {
         let body: String = fs::read_to_string("templates/index.html").unwrap().parse().unwrap();
@@ -185,8 +169,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_img = warp::path("img").and(warp::fs::dir("./assets/img/"));
     
 
-    heartbeat 
-        .or(get_img)
+    get_img 
         .or(get_js)
         .or(get_css)
         .or(get_font)
@@ -209,7 +192,6 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_gif_render)
         .or(get_render_info)
         .or(home)
-        .or(default)
         .boxed()
 }
 
