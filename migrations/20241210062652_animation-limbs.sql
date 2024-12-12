@@ -13,11 +13,12 @@ CREATE TABLE IF NOT EXISTS animation_limb (
     animation_id INTEGER,
     name VARCHAR NOT NULL,
     color VARCHAR,  
-    parent VARCHAR UNIQUE
+    parent VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS animation_limb_move (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    animation_limb_id INTEGER,
     x FLOAT NOT NULL,
     y FLOAT NOT NULL,
     rot FLOAT NOT NULL,
