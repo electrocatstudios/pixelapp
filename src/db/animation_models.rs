@@ -7,6 +7,7 @@ pub struct Animation {
     pub description: String,
     pub width: i32,
     pub height: i32,
+    pub length: i32,
     pub guid: String,
 }
 
@@ -37,6 +38,7 @@ pub struct AnimationDesc {
     pub description: String,
     pub width: i32,
     pub height: i32,
+    pub length: i32
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,6 +48,7 @@ pub struct AnimationDetails {
     pub width: i32,
     pub height: i32,
     pub guid: String,
+    pub length: i32,
     pub animation_limbs: Vec::<AnimationLimbDetails>
 }
 
@@ -57,6 +60,7 @@ impl AnimationDetails {
             width: 0,
             height: 0,
             guid: "".to_string(),
+            length: 2000,
             animation_limbs: Vec::new()
         }
     }
@@ -68,6 +72,7 @@ impl AnimationDetails {
             width: anim.width,
             height: anim.height,
             guid: anim.guid.clone(),
+            length: anim.length,
             animation_limbs: Vec::new()
         }
     }

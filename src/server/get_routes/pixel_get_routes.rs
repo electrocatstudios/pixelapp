@@ -57,17 +57,6 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
-    
-    // Get /load
-    let load_animation_page = warp::path("load_animation").map(|| {
-        let body: String = fs::read_to_string("templates/saved_animations.html").unwrap().parse().unwrap();
-        let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("tpl_2", body).unwrap();
-        warp::reply::html(
-            handlebars.render("tpl_2", &json!({})).unwrap()
-        )
-    });
-
     // GET /render/<guid>
     let load_render_page = warp::path!("render" / String).map(|guid: String| {
         let body: String = fs::read_to_string("templates/render.html").unwrap().parse().unwrap();
@@ -82,11 +71,6 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let pixel_page = warp::path!("pixel" / String)
         .and(db_conn.clone())
         .and_then(render_pixel_page);
-
-    // Get /animation/<guid> - get the page for an existing animation
-    let animation_page = warp::path!("animation" / String)
-        .and(db_conn.clone())
-        .and_then(render_animation_page);
 
     // GET /api/pixel - get list of pixels
     let get_pixel_list_route = warp::get()
@@ -173,9 +157,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_image_render)
         .or(get_image_render_single)
         .or(load_render_page)
-        .or(load_animation_page)
         .or(pixel_page)
-        .or(animation_page)
         .or(new_collection_page)
         .or(get_pixel_list_route)
         .or(get_pixel_details)
@@ -193,27 +175,6 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 async fn render_pixel_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let body: String = fs::read_to_string("templates/pixel.html").unwrap().parse().unwrap();
     let page_json = match queries::get_pixel_details_as_json(guid, &mut db_pool.clone()).await {
-        Ok(page_json) => page_json,
-        Err(err) => {
-            log::error!("{}", err);
-            return  Err(warp::reject());
-        }
-    };
-    let mut handlebars = Handlebars::new();
-    handlebars.register_template_string("tpl_1", body).unwrap();
-    Ok(
-        Box::new(
-            warp::reply::html(
-                handlebars.render("tpl_1",  &page_json).unwrap()
-            )
-        )
-    )
-   
-}
-
-async fn render_animation_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    let body: String = fs::read_to_string("templates/animation.html").unwrap().parse().unwrap();
-    let page_json = match queries::get_animation_details_as_json(guid, &mut db_pool.clone()).await {
         Ok(page_json) => page_json,
         Err(err) => {
             log::error!("{}", err);

@@ -8,6 +8,7 @@ function create_animation(){
     var name = $('#name').val();
     var width = $('#imgwidth').val();
     var height = $('#imgheight').val();
+    var length = $('#animlength').val();
     
     if(name == undefined || name == null || name == ""){
         $('#error').html("Name cannot be blank");
@@ -16,11 +17,13 @@ function create_animation(){
 
     var data = {
         name: name,
+        description: "", // Blank for now - maybe later
         width: parseInt(width),
         height: parseInt(height),
+        length: parseInt(length),
     }
 
-    var url = '/api/new_animation';
+    var url = '/api/animation_new';
     $.ajax({
         url: url,
         type: 'POST',

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS animation (
     description VARCHAR,
     width INT NOT NULL,
     height INT NOT NULL,
+    length INT NOT NULL,
     guid VARCHAR UNIQUE
 );
 
