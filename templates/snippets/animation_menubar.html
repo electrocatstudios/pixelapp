@@ -17,9 +17,22 @@
         <!-- </span> -->
     </div><br>
     <div style='max-width: 400px;'>
+        <button id='tools_button' onclick='load_tools()'  style='float:left'>Tools</button>
         <button id='details_button' onclick='load_details()' style='float:left'>Details</button>
     </div>
     <br>
+    <div id='tools' style='display:inline-block;max-width:400px'>
+        <div id='pixel_name' style='text-align: left; margin-left: 20px;font-size:100%'></div>
+        <div style='text-align: left;padding:20px;'>
+            <button onclick='save_animation()'>
+                Save
+            </button>
+            <button onclick='window.location.href="/";'>
+                Back
+            </button>
+        </div> 
+    </div>
+
     <div id='details' style='max-width:400px;'>
         <div id='animation_name' style='text-align: left; margin-left: 20px;font-size:100%'>Name</div>
         Details:

@@ -42,6 +42,26 @@ pub struct AnimationDesc {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct AnimationSaveDesc {
+    pub guid: String,
+    pub limbs: Vec::<AnimationSaveLimbDesc>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AnimationSaveLimbDesc {
+    pub limb_moves: Vec::<AnimationSaveLimbMovesDesc>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AnimationSaveLimbMovesDesc {
+    pub x: f64,
+    pub y: f64,
+    pub rot: f64,
+    pub length: f64,
+    pub perc: f64
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AnimationDetails {
     pub name: String,
     pub description: String,

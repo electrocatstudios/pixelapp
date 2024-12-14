@@ -1,4 +1,9 @@
 function SkeletonManager() {
+    this.anim_id = window.animation_id;
+
+    this.loadData = SkeletonManagerLoadData;
+    this.getAnimationData = SkeletonManagerGetAnimationData;
+
     this.draw = SkeletonManagerDraw;
     this.update = SkeletonManagerUpdate;
     this.add_animation_limb = SkeletonManagerAddAnimationLimb;
@@ -9,6 +14,8 @@ function SkeletonManager() {
     this.update_limb_move = SkeletonManagerUpdateLimbMove;
     this.delete_limb_move = SkeletonManagerRemoveLimbMove;
     this.selected = null;
+
+    this.loadData(this.anim_id)
 }
 
 function SkeletonManagerAddAnimationLimb(x,y,rot,length,color, name, parent) {
@@ -302,4 +309,32 @@ function SkeletonManagerRemoveLimbMove(idx) {
             limb.remove_position(idx);
         }
     }
+}
+
+function SkeletonManagerLoadData(anim_id) {
+    var url = "/api/animation/" + anim_id;
+    console.log("loading...");
+    $.ajax({
+        url: url,
+        type: 'GET',
+        dataType: 'json',
+        success: function(ret){
+            if(ret.status != "ok"){
+                // console.log(ret.message);
+                $('#error').html(ret.message);
+                return;
+            }
+            // TODO: Remove this
+            console.log(ret);
+        }, 
+        error: function(ret){
+            console.log("ERROR while getting saved data");
+            console.log(ret);
+        }
+    })
+}
+
+function SkeletonManagerGetAnimationData() {
+    // TODO: Return the actual limb information in expected format
+    console.log("SkeletonManagerGetAnimationData is not implemented!")
 }

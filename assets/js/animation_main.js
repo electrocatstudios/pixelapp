@@ -100,3 +100,38 @@ function update(){
     SKELETON_MANAGER.update(currentTime / (animationLength / 1000));
     SKELETON_MANAGER.draw(ctx);
 }
+
+
+
+function save_animation(){
+    var limbs = SKELETON_MANAGER.getAnimationData();
+    var guid = window.animation_id;
+    var data = {
+        guid: guid,
+        limbs: limbs,
+    }
+
+    var url = "/api/animation_save";
+    $.ajax({
+        url: url,
+        type: 'POST',
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data),
+        // beforeSend: function (xhr) {
+        //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+        // },
+        success: function(ret){
+            if(ret.status != 'ok'){
+                $('#error').html(ret.message);
+                return;
+            }
+            // TODO: Post a toast saying we succeeded
+            close_menu();
+        },
+        error: function(ret){
+            console.log("ERROR saving pixel data");
+            console.log(ret);
+        }
+    })
+}
