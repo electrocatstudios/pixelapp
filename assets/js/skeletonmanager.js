@@ -324,8 +324,22 @@ function SkeletonManagerLoadData(anim_id) {
                 $('#error').html(ret.message);
                 return;
             }
-            // TODO: Remove this
             console.log(ret);
+            // TODO: Remove this
+            
+            SKELETON_MANAGER.limb_list = []
+            for(var i=0;i<ret.animation.animation_limbs.length;i++){
+                let limb = ret.animation.animation_limbs[i];
+
+                let first_move = limb.animation_limb_moves[0]; 
+                SKELETON_MANAGER.add_animation_limb(first_move.x,first_move.y,first_move.rot,first_move.length,limb.color, first_move.name, parent);
+                let new_limb = SKELETON_MANAGER.limb_list[SKELETON_MANAGER.limb_list.length-1];
+                for(var j=1;j<limb.animation_limb_moves.length;j++){
+                    let limb_move = limb.animation_limb_moves[j];
+                    new_limb.add_position(limb_move.x, limb_move.y, limb_move.rot, limb_move.length, limb_move.perc);
+                }
+            }
+            SKELETON_MANAGER.refresh();
         }, 
         error: function(ret){
             console.log("ERROR while getting saved data");
