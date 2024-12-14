@@ -110,7 +110,6 @@ function save_animation(){
         guid: guid,
         limbs: limbs,
     }
-
     var url = "/api/animation_save";
     $.ajax({
         url: url,

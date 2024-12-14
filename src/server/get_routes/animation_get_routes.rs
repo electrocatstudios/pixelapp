@@ -73,7 +73,7 @@ async fn get_animation_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>
 }
 
 async fn get_animation_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    let animation = match animation_queries::get_animation_from_guid(guid, &mut db_pool.clone()).await {
+    let animation = match animation_queries::get_animation_details_from_guid(guid, &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(err) => {
             return Ok(

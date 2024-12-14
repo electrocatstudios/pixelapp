@@ -9,7 +9,14 @@ function AnimationLimb(name, col, startPos, parent){
     this.update_position = AnimationLimbUpdatePosition;
     this.remove_position = AnimationLimbDelPosition;
     this.get_first = function() { return this.moves_list[0] };
-
+    this.get_as_json = () => {
+        let ret = [];
+        for (var i=0;i<this.moves_list.length;i++){
+            let lmove = this.moves_list[i];
+            ret.push(lmove.get_as_json())
+        }
+        return ret;
+    }
 }
 
 function AnimationLimbAddPosition(x, y, rot, length, perc) {
@@ -50,7 +57,7 @@ function AnimationLimbPosition(x, y, rot, length, perc) {
     this.rot = rot;
     this.length = length;
     this.perc = perc;
-
+    this.get_as_json = () => {return {x: this.x, y: this.y, rot: this.rot, length: this.length, perc: this.perc}};
     this.get_end_x = () => {return this.x + (this.length * Math.sin(this.rot))};
     this.get_end_y = () => {return this.y + (this.length * Math.cos(this.rot))};
     this.copy = () => {return new AnimationLimbPosition(this.x, this.y, this.rot, this.length, this.perc)}

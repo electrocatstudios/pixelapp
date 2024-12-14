@@ -313,7 +313,7 @@ function SkeletonManagerRemoveLimbMove(idx) {
 
 function SkeletonManagerLoadData(anim_id) {
     var url = "/api/animation/" + anim_id;
-    console.log("loading...");
+    // console.log("loading...");
     $.ajax({
         url: url,
         type: 'GET',
@@ -330,12 +330,19 @@ function SkeletonManagerLoadData(anim_id) {
             SKELETON_MANAGER.limb_list = []
             for(var i=0;i<ret.animation.animation_limbs.length;i++){
                 let limb = ret.animation.animation_limbs[i];
-
+                if(limb.animation_limb_moves.length < 1){
+                    console.log("We have an orphaned limb");
+                    continue;
+                }
                 let first_move = limb.animation_limb_moves[0]; 
-                SKELETON_MANAGER.add_animation_limb(first_move.x,first_move.y,first_move.rot,first_move.length,limb.color, first_move.name, parent);
+                // console.log(first_move);
+
+                SKELETON_MANAGER.add_animation_limb(first_move.x,first_move.y,first_move.rot,first_move.length,limb.color, limb.name, limb.parent);
                 let new_limb = SKELETON_MANAGER.limb_list[SKELETON_MANAGER.limb_list.length-1];
                 for(var j=1;j<limb.animation_limb_moves.length;j++){
+                
                     let limb_move = limb.animation_limb_moves[j];
+                    // console.log(limb_move);
                     new_limb.add_position(limb_move.x, limb_move.y, limb_move.rot, limb_move.length, limb_move.perc);
                 }
             }
@@ -350,5 +357,16 @@ function SkeletonManagerLoadData(anim_id) {
 
 function SkeletonManagerGetAnimationData() {
     // TODO: Return the actual limb information in expected format
-    console.log("SkeletonManagerGetAnimationData is not implemented!")
+    var ret = [];
+    for(var i=0;i<this.limb_list.length;i++){
+        var limb = this.limb_list[i];
+        var nxt = {
+            name: limb.name,
+            color: limb.color,
+            parent: limb.parent === null ? "" : limb.parent,
+            limb_moves: limb.get_as_json()
+        };
+        ret.push(nxt);    
+    }
+    return ret;
 }

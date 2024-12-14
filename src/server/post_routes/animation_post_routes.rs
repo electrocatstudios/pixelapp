@@ -62,21 +62,32 @@ async fn create_new_animation_impl(anim: AnimationDesc, db_pool: Pool<Sqlite>) -
     )
 }
 
-async fn save_animation_limbs_impl(_save_desc: AnimationSaveDesc, _db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    // let anim_id = match animation_queries::create_new_animation(anim, &mut db_pool.clone()).await {
-    //     Ok(res) => res,
-    //     Err(err) => {
-    //         return Ok(
-    //             Box::new(
-    //                 warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
-    //             )
-    //         )
-    //     }
-    // };
-    // TODO: Implement the limb save
-    Ok(
-        Box::new(
-            warp::reply::json(&json!({"status": "ok", "message": ""}))
-        )
-    )
+async fn save_animation_limbs_impl(save_desc: AnimationSaveDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let anim = match animation_queries::get_animation_from_guid(save_desc.guid, &mut db_pool.clone()).await {
+        Ok(anim) => {anim},
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    };
+    // TODO: Implement the limb save - animation_queries::update_limbs_for_animation(anim.id)
+    match animation_queries::update_limbs_for_animation(anim.id, save_desc.limbs, &mut db_pool.clone()).await {
+        Ok(_) => {       
+            Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "ok", "message": ""}))
+                )
+            )
+        },
+        Err(err) => {
+            Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    }   
 }
