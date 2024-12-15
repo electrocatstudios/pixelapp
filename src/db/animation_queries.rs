@@ -52,6 +52,18 @@ pub async fn get_animation_from_guid(guid: String, pool: &mut Pool<Sqlite>) -> R
     }
 }
 
+pub async fn get_animation_from_id(id: i32, pool: &mut Pool<Sqlite>) -> Result<Animation, DBError> {
+    // Return the animation - not for serializing to JSON (contains id)
+    match sqlx::query_as::<_,Animation>(
+        "SELECT * FROM animation WHERE id=$1"
+    )
+    .bind(id)
+    .fetch_one(&*pool).await {
+        Ok(anim) => Ok(anim),
+        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
 pub async fn get_animation_details_from_guid(guid: String, pool: &mut Pool<Sqlite>) -> Result<AnimationDetails, DBError> {
     // Return the AnimationDetails - which you can serialize, doesn't contain ID
     let animation = match get_animation_from_guid(guid.clone(), &mut pool.clone()).await {

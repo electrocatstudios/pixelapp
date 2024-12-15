@@ -8,7 +8,8 @@ function DrawManager(ctx, ctx_out){
         guidelines: true,
         background: true,
         foreground: true,
-        shader: false
+        shader: false,
+        animation: true
     }
     this.update = DrawManagerUpdate;
     this.draw = DrawManagerDraw;
@@ -19,7 +20,6 @@ function DrawManager(ctx, ctx_out){
     this.background_color = "#000000";
     this.alpha_channel = 1.0;
     this.alpha_channel_shader = 0.5;
-    
 
     this.performResize = DrawManagerPerformResize;
 
@@ -31,10 +31,23 @@ function DrawManager(ctx, ctx_out){
     this.animatepreview = false;
     this.animation_frame = 0;
     this.animation_cooldown = MAX_ANIMATION_COOLDOWN;
+
+    this.animation_guide = [];
 }
 
 function DrawManagerUpdate(){
-
+    if(window.animation_id !== undefined && window.animation_id !== null && window.animation_id !== ""){
+        let num_frames = PIXEL_MANAGER.saved_image_data.length
+        if(this.animation_guide.length < num_frames) {
+            this.animation_guide = []; // Refresh the whole list - size has changed
+            for(var i=0;i<num_frames;i++){
+                var nxt = new Image();
+                var src = '/img/animation_render/' + window.animation_id + "/" + i + "/" + (num_frames - 1);
+                nxt.src = src;
+                this.animation_guide.push(nxt);
+            }
+        }
+    }
 }
 
 // Pass in null to ignore that one
@@ -77,7 +90,20 @@ function DrawManagerDraw(){
         ctx.fillStyle = DRAW_MANAGER.background_color;
         ctx.fillRect(0,0,w,h);
     }
-  
+
+    // Draw animation guide
+    if(window.animation_guid !== "" 
+        && this.view_list.animation 
+        && this.animation_guide.length ==  PIXEL_MANAGER.saved_image_data.length ) {
+        ctx.drawImage(
+            this.animation_guide[this.cur_frame],
+            0,
+            0,
+            this.animation_guide[this.cur_frame].width,
+            this.animation_guide[this.cur_frame].height
+            );
+    }
+
     //vertical bars
     let dims = PIXEL_MANAGER.getDimensions();
     if(dims == undefined){

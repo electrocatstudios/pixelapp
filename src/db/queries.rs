@@ -94,7 +94,7 @@ pub async fn create_new_pixel_with_animation(data: PixelImageDesc, animation_gui
     let res = match sqlx::query(
         "INSERT INTO pixelimage(name, description, \
         width, height, pixelwidth, guid, collection_id, animation_id) VALUES \
-        ($1, $2, $3, $4, $5, $6, $7)"
+        ($1, $2, $3, $4, $5, $6, $7, $8)"
         )
         .bind(&data.name)
         .bind(&data.description)
@@ -126,13 +126,22 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
         Ok(pix) => pix,
         Err(err) => return Err(DBError::UnknownError(err.to_string()))
     };
-        
+    
     let toolbar: String = fs::read_to_string("templates/snippets/toolbar.html").unwrap().parse().unwrap();
     let menubar: String = fs::read_to_string("templates/snippets/menubar.html").unwrap().parse().unwrap();
     let coll_id = match pixel.collection_id {
         Some(id) => format!("{}", id),
         None => "null".to_string()
-    };    
+    };
+
+    let animation_id = match pixel.animation_id {
+        Some(id) => match animation_queries::get_animation_from_id(id, pool).await {
+            Ok(a) => format!("{}", a.guid),
+            Err(_) => "".to_string()
+        },
+        None => "".to_string()
+    };
+    
     let ret = &json!({
         "name": &pixel.name,
         "width": &pixel.width,
@@ -141,7 +150,8 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
         "guid": &pixel.guid,
         "toolbar": &toolbar,
         "menubar": &menubar,
-        "collection_id": &coll_id
+        "collection_id": &coll_id,
+        "animation_guid": &animation_id
     });
 
     Ok(ret.clone())
