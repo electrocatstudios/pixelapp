@@ -90,15 +90,15 @@ function DrawManagerDraw(){
         ctx.fillStyle = DRAW_MANAGER.background_color;
         ctx.fillRect(0,0,w,h);
     }
-
-    // Draw animation guide
+     
+    // Draw animation guide - TODO: Should respect zoom
     if(window.animation_guid !== "" 
         && this.view_list.animation 
         && this.animation_guide.length ==  PIXEL_MANAGER.saved_image_data.length ) {
         ctx.drawImage(
             this.animation_guide[this.cur_frame],
-            0,
-            0,
+            this.position.x,
+            this.position.y,
             this.animation_guide[this.cur_frame].width,
             this.animation_guide[this.cur_frame].height
             );
