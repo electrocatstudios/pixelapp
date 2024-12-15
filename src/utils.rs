@@ -19,7 +19,8 @@ pub fn color_to_hex_string(r: u8, g: u8, b: u8) -> String {
     format!("{}{}{}", r, g, b)
 }
 
-pub fn hex_string_to_color(hex: String) -> (u8, u8, u8) {
+pub fn hex_string_to_color(hex_in: String) -> (u8, u8, u8) {
+    let hex = hex_in.replace("#", "");
     if hex.len() != 6 {
         return (0,0,0);
     }
@@ -53,6 +54,16 @@ mod utils_tests {
 
         // Check failure conditions
         assert_eq!(hex_string_to_color("fff".to_string()), (0,0,0));
+    }
+
+    #[test]
+    fn test_convert_hex_string_with_hash_start() {
+        assert_eq!(hex_string_to_color("#000000".to_string()), (0,0,0));
+        assert_eq!(hex_string_to_color("#010203".to_string()), (1,2,3));
+        assert_eq!(hex_string_to_color("#fffefd".to_string()), (255,254,253));
+
+        // Check failure conditions
+        assert_eq!(hex_string_to_color("#fff".to_string()), (0,0,0));
     }
 
 }

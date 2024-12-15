@@ -73,7 +73,6 @@ async fn save_animation_limbs_impl(save_desc: AnimationSaveDesc, db_pool: Pool<S
             )
         }
     };
-    // TODO: Implement the limb save - animation_queries::update_limbs_for_animation(anim.id)
     match animation_queries::update_limbs_for_animation(anim.id, save_desc.limbs, &mut db_pool.clone()).await {
         Ok(_) => {       
             Ok(

@@ -1,15 +1,16 @@
 use sqlx::Sqlite;
 use sqlx::pool::Pool;
 use std::io::Cursor;
-use image::{Pixel,Rgba,RgbaImage};
+use image::{Pixel, Rgb, Rgba, RgbaImage};
+use imageproc::drawing::{draw_antialiased_line_segment_mut, draw_line_segment_mut};
 
 use gif::{Frame, Encoder, Repeat};
 
 use std::vec::Vec;
 
-use crate::db::queries;
+use crate::db::{animation_queries, queries}; //
 use crate::server::query_params::{GifRenderQuery, GifRenderType};
-use crate::utils::*;
+use crate::utils::{self, *};
 
 pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlite>) -> Result<Box<Vec<u8>>, String> {
     let pixel = match queries::get_pixel_details(guid.clone(), &mut db_pool.clone()).await {
@@ -128,3 +129,55 @@ pub async fn render_gif(guid: String, query: GifRenderQuery, db_pool: Pool<Sqlit
     Ok(Box::new(encoder.get_ref().get_ref().to_vec()))
 }
 
+pub async fn render_animationgif(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<Vec<u8>>, String> {
+    let animation = match animation_queries::get_animation_details_from_guid(guid.clone(), &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_) => {
+            return Err( "Unable to find pixel image".to_string())
+        }
+    };
+
+    let secs = animation.length as f64 / 1000.0;
+    let frames = secs * 10.0; // FPS is 10 - this should be a setting
+
+    let color_map = &[];
+   
+    // Create fake "file"
+    let mut image = Cursor::new(Vec::new());
+    
+    let mut encoder = Encoder::new(&mut image, animation.width as u16, animation.height as u16, color_map).unwrap();
+    encoder.set_repeat(Repeat::Infinite).unwrap();
+
+    for i in 0..frames as i32 {
+        // Calculate perc
+        let perc = i as f64 / frames as f64;
+
+        let background_color = Rgba([0, 0, 0, 255]);
+        let mut nxt = RgbaImage::from_pixel(animation.width as u32, animation.height as u32, background_color);
+
+        for limb in animation.animation_limbs.iter() {
+            // Find index of pieces
+            if limb.animation_limb_moves.len() < 1 {
+                continue;
+            }
+            let col = utils::hex_string_to_color(limb.color.to_string());
+            let col = Rgba([col.0, col.1, col.2, 255u8]);
+            if limb.animation_limb_moves.len() < 2 {
+                // We only have one for this limb - just use that
+                let lm = limb.animation_limb_moves[0];
+                let start = (lm.x as f32, lm.y as f32);
+                let end = (
+                    (lm.x + (lm.rot.sin() * lm.length)) as f32,
+                    (lm.y + (lm.rot.cos() * lm.length)) as f32,
+                );
+
+                draw_line_segment_mut(&mut nxt, start, end, col);
+            }
+        }
+        let frame = Frame::from_rgba(animation.width as u16,animation.height as u16, &mut nxt.into_raw());
+        // frame.delay = 1;
+        encoder.write_frame(&frame.clone()).unwrap();
+    }
+
+    Ok(Box::new(encoder.get_ref().get_ref().to_vec()))
+}

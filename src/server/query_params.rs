@@ -40,6 +40,15 @@ pub struct GifRenderQuery {
     render_type: GifRenderType
 }
 
+impl GifRenderQuery {
+    pub fn default() -> Self {
+        GifRenderQuery {
+            query: None,
+            render_type: GifRenderType::Forward
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum GifRenderType {
     Forward,

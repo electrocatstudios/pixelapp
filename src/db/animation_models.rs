@@ -135,7 +135,7 @@ impl AnimationLimbDetails {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub struct AnimationLimbMoveDetails {
     pub x: f64,
     pub y: f64,

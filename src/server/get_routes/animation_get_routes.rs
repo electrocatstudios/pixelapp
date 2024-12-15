@@ -5,8 +5,8 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::animation_queries;
-
+use crate::{db::animation_queries, server::query_params::GifRenderQuery};
+use crate::image::gif;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // Get /animation_new - get the page for creating a new pixel image
@@ -40,15 +40,27 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_animation_list_impl);
 
+    // GET /api/animation - get details about individual animation
     let get_animation = warp::path!("api" / "animation" / String)
         .and(db_conn.clone())
         .and_then(get_animation_impl);
+
+    // GET /render/<guid> - get the output sprite sheet
+    let get_gif_render = warp::path!("img" / "animation_gif" / String)
+        .and(warp::get())
+        // .and(warp::filters::query::raw()
+        //      .or(warp::any().map(|| String::default()))
+        //      .unify()
+        // )
+        .and(db_conn.clone())
+        .and_then(get_animationgif_render_impl);
 
     new_animation_page
         .or(get_animation_list)
         .or(get_animation)
         .or(load_animation_page)
         .or(animation_page)
+        .or(get_gif_render)
         .boxed()
 }
 
@@ -91,7 +103,6 @@ async fn get_animation_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<d
     )
 }
 
-
 async fn render_animation_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let body: String = fs::read_to_string("templates/animation.html").unwrap().parse().unwrap();
     let page_json = match animation_queries::get_animation_details_as_json(guid, &mut db_pool.clone()).await {
@@ -108,6 +119,24 @@ async fn render_animation_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Bo
             warp::reply::html(
                 handlebars.render("tpl_1",  &page_json).unwrap()
             )
+        )
+    )
+}
+
+async fn get_animationgif_render_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+
+    // let bytes: Vec<u8> = match gif::render_animationgif(guid, db_pool).await {
+    let bytes: Vec<u8> = match gif::render_animationgif(guid, db_pool).await {
+        Ok(b) => *b,
+        Err(err) => {
+            log::error!("Error rendering gif: {}", err);
+            return Err(warp::reject::not_found());
+        }
+    };
+    
+    Ok(
+        Box::new(
+            warp::reply::with_header(bytes, "Content-Type", "image/gif")
         )
     )
 }
