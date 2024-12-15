@@ -1,3 +1,5 @@
+var animation_list = [];
+
 $(document).ready(function(){
     var url = "/api/collection";
     $.ajax({
@@ -30,7 +32,9 @@ $(document).ready(function(){
             console.log("Error getting saved pixels")
             console.log(ret)
         }
-    })
+    });
+
+    update_animation_list();
 })
 
 function create_picture(){
@@ -51,13 +55,26 @@ function create_picture(){
         return;
     }
 
+    var anim_sel = $('#selected_animation').val();
+    if(anim_sel === "") {
+        anim_sel = null;
+        var frame_count = $('#frame_count').val();
+        try {
+            frame_count = parseInt(frame_count);            
+        } catch {
+            frame_count = null;
+        }
+    }
+
     var data = {
         name: name,
         description: desc,
         collection: parseInt(collection),
         width: parseInt(width),
         height: parseInt(height),
-        pixelwidth: parseInt(pixelwidth)
+        pixelwidth: parseInt(pixelwidth),
+        animation: anim_sel,
+        frame_count: frame_count
     }
 
     // // console.log(data);
@@ -134,4 +151,63 @@ function load_from_file(){
     })(filename);
     
     reader.readAsText(filename);
+}
+
+// Push details of existing animations 
+function update_animation_list() {
+    animation_list = [];
+
+    $.ajax({
+        url: "api/animation",
+        type: 'GET',
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: function(ret) {
+            if(ret.status !== 'ok') {
+                $("#error").html(ret.message);
+                return;
+            }
+            var output = "Animation: <select id='selected_animation' onchange='animation_select_changed()'>";
+            output += "<option value=''>--Select an Animation--</option>";
+            for(var i=0;i<ret.animations.length;i++){
+                var a = ret.animations[i];
+                output += "<option value='" + a.guid + "'>" + a.name + "</option>";
+            }
+            output += "</select>";
+            output += "<div id='animation_frame_count'>Frame count: <input id='frame_count' type='number'>";
+            $('#animation_selector').html(output);
+            $('#animation_frame_count').hide();
+            animation_list = ret.animations;
+        },
+        error: function(err) {
+            console.log("ERROR getting animation name list");
+            console.log(err);
+        }
+    });
+}
+
+
+function animation_select_changed() {
+    console.log("animation selection changed");
+    var sel = $('#selected_animation').val();
+    // console.log(sel);
+    var bfound = false;
+    for(var i=0;i<animation_list.length;i++){
+        var a = animation_list[i];
+        if(a.guid === sel) {
+            $('#imgwidth').val(a.width);
+            $('#imgheight').val(a.height);
+            bfound = true;
+        }
+    }
+
+    if(!bfound) {
+        console.log("Was unable to find the selected animation")
+    }
+
+    if(sel === "") {
+        $('#animation_frame_count').hide();
+    } else {
+        $('#animation_frame_count').show();
+    }
 }

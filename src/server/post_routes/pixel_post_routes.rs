@@ -100,16 +100,41 @@ fn json_body_for_new_collection() -> impl Filter<Extract = (NewCollectionData,),
 
 // Create the new pixel from the components
 async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    let pix_id = match queries::create_new_pixel(pixel, &mut db_pool.clone()).await {
-        Ok(res) => res,
-        Err(err) => {
-            return Ok(
-                Box::new(
-                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
-                )
-            )
-        }
+    let anim_guid = match &pixel.animation {
+        Some(guid) => guid.to_string(),
+        None => "".to_string()
     };
+    let anim_frames = match &pixel.frame_count {
+        Some(fc) => *fc,
+        None => 5
+    };
+
+    if anim_guid != "".to_string() {
+        // Create an image with a reference to the animation passed in
+        // It also passes the number of frames, to prepare them in advance
+        let pix_id = match queries::create_new_pixel_with_animation(pixel, anim_guid, anim_frames, &mut db_pool.clone()).await {
+            Ok(res) => res,
+            Err(err) => {
+                return Ok(
+                    Box::new(
+                        warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                    )
+                )
+            }
+        };
+    } else {
+        let pix_id = match queries::create_new_pixel(pixel, &mut db_pool.clone()).await {
+            Ok(res) => res,
+            Err(err) => {
+                return Ok(
+                    Box::new(
+                        warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                    )
+                )
+            }
+        };
+    }
+    
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": "", "pixelid": pix_id}))

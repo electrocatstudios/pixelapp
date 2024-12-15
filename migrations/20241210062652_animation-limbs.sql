@@ -26,3 +26,5 @@ CREATE TABLE IF NOT EXISTS animation_limb_move (
     length FLOAT NOT NULL,
     perc FLOAT NOT NULL
 );
+
+ALTER TABLE pixelimage ADD COLUMN animation_id INT DEFAULT NULL;
