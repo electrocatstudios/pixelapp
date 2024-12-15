@@ -41,7 +41,7 @@ pub struct GifRenderQuery {
 }
 
 impl GifRenderQuery {
-    pub fn default() -> Self {
+    pub fn _default() -> Self {
         GifRenderQuery {
             query: None,
             render_type: GifRenderType::Forward

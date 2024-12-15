@@ -5,7 +5,7 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::{db::animation_queries, server::query_params::GifRenderQuery};
+use crate::db::animation_queries;
 use crate::image::gif;
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {

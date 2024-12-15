@@ -26,15 +26,15 @@ $(document).ready(function(){
 })
 
 function refresh_anim_list() {
-  
+
     var output = "";
     for(var i=0;i<anim_list.length;i++){
         var p = anim_list[i];
-        
+
         if(search_prompt !== "" && !p.name.includes(search_prompt)) {
             continue;
         }
-        
+
         output += "<div class='row choose_menu_items'>"
         // output += "<a href='/pixelapp/" + p.id + "'>"
         output += "<div class='column choose_menu_item'>" + p.name + "<br>";
@@ -47,7 +47,6 @@ function refresh_anim_list() {
         // output += "This process is unrecoverable are you sure?<br>"
         // output += "<button onclick='delete_pixel(\"" + p.guid + "\")'>Confirm</button>";
         // output += "<button onclick='cancle_confirmation(\"" + p.guid + "\")'>Cancel</button>";
-        
         // output += "</div>"
         output += "</div>";
         // output += "</a>";

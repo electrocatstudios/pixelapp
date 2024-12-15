@@ -1,7 +1,7 @@
 use sqlx::Sqlite;
 use sqlx::pool::Pool;
 use std::io::Cursor;
-use image::{Pixel, Rgb, Rgba, RgbaImage};
+use image::{Pixel, Rgba, RgbaImage};
 use imageproc::drawing::draw_line_segment_mut;
 
 use gif::{Frame, Encoder, Repeat};
