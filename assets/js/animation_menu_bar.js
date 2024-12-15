@@ -12,42 +12,11 @@ $(document).ready(function () {
 
     $('#width_selector').val(window.picture_width);
     $('#height_selector').val(window.picture_height);
+    $('#time_length').val(window.animation_length);
+
     $('#pixel_width_display').val(window.pixel_size);
     $('#backgroundcolor').val("#000000");
 
-    // Show the selected collection
-    var url = "/api/collection";
-    $.ajax({
-        url: url,
-        type: 'GET',
-        dataType: 'json',
-        success: function(ret){
-            if(ret.status != "ok"){
-                $('#error').html(ret.message);
-                return;
-            }
-            var output = "<select id='sel_collection'><option>--All--</option>";
-            for(var i=0;i<ret.collections.length;i++){
-                var c = ret.collections[i];
-                output += "<option value='" + c.id + "'";
-                if(c.id == window.collection_id) {
-                    output += " selected";
-                }
-
-                if(c.name === ""){
-                    output += ">[None]</option>"
-                } else {
-                    output += ">" + c.name + "</option>"
-                }
-            }
-            output += "</select>";
-            $('#sel_coll').html(output);
-        },
-        error: function(ret){
-            console.log("Error getting saved pixels")
-            console.log(ret)
-        }
-    })
 });
 
 var applicationMenuShown = false;
@@ -110,23 +79,20 @@ function load_transforms(){
     $('#transforms_button').addClass('selected_button_black');
 }
 
-function update_details(){
+function update_animation_details(){
     $('#error').html("");
 
     var width = $('#width_selector').val();
     var height = $('#height_selector').val();
-    var collection = $('#sel_collection').val();
+    var time_len = $('#time_length').val();
     
     var data = {
         width: parseInt(width),
-        height: parseInt(height)
-    }
-
-    if(collection !== undefined && collection !== null && collection !== 0){
-        data.collection = parseInt(collection);
+        height: parseInt(height),
+        time_length: parseInt(time_len)
     }
     
-    var url='/api/size/' + window.pixel_id;
+    var url='/api/animation_details/' + window.animation_id;
     $.ajax({
         url: url,
         type: 'POST',

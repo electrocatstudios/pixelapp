@@ -15,6 +15,8 @@ function SkeletonManager() {
     this.delete_limb_move = SkeletonManagerRemoveLimbMove;
     this.selected = null;
 
+    this.show_border = true;
+    this.toggle_border = () => { this.show_border = !this.show_border };
     this.loadData(this.anim_id)
 }
 
@@ -107,6 +109,23 @@ function new_limb_selected() {
 }
 
 function SkeletonManagerDraw(ctx) {
+    // Calculate offset
+    var offset_x = (GAME_SIZE.x / 2) - window.picture_width/2;
+    var offset_y = (GAME_SIZE.y / 2) - window.picture_height/2;
+    
+    if(this.show_border){
+        var old_stroke_style = ctx.strokeStyle;
+        ctx.strokeStyle = "#ffff00";
+        ctx.beginPath();
+        ctx.moveTo(offset_x + 0, offset_y + 0);
+        ctx.lineTo(offset_x + window.picture_width, offset_y + 0);
+        ctx.lineTo(offset_x + window.picture_width, offset_y +window.picture_height);
+        ctx.lineTo(offset_x + 0, offset_y +window.picture_height);
+        ctx.lineTo(offset_x + 0, offset_y +0);
+        ctx.stroke();
+        ctx.strokeStyle = old_stroke_style;
+    }
+
     for(var i=0; i<this.limb_current.length;i++){
         var limb = this.limb_current[i];
         var pos = limb.get_first();
@@ -114,10 +133,10 @@ function SkeletonManagerDraw(ctx) {
         var old_stroke_style = ctx.strokeStyle;
         
         ctx.strokeStyle = limb.color;
-        ctx.moveTo(pos.x, pos.y);
+        ctx.moveTo(offset_x + pos.x, offset_y + pos.y);
         ctx.lineTo(
-            pos.x + (pos.length * Math.sin(pos.rot)),
-            pos.y + (pos.length * Math.cos(pos.rot))
+            offset_x + pos.x + (pos.length * Math.sin(pos.rot)),
+            offset_y + pos.y + (pos.length * Math.cos(pos.rot))
         );
         ctx.stroke();
         ctx.strokeStyle = old_stroke_style;

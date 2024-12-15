@@ -3,7 +3,7 @@ use serde_json::json;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{SqlitePool, Pool, Sqlite};
 
-use crate::db::{animation_models::{AnimationDesc, AnimationSaveDesc}, animation_queries};
+use crate::db::{animation_models::{AnimationDesc, AnimationSaveDesc, AnimationUpdateDesc}, animation_queries};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
 
@@ -23,8 +23,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and_then(save_animation_limbs_impl);
 
     
+    // POST /api/animation_details/<guid> - update animation based on new details
+    let update_animation_details = warp::post()
+        .and(warp::path!("api" / "animation_details" / String))
+        .and(json_body_update_animation())
+        .and(db_conn.clone())
+        .and_then(update_animation_impl);
+
     create_new_animation
         .or(save_animation_limbs)
+        .or(update_animation_details)
         .boxed()
 }
 
@@ -37,6 +45,11 @@ fn json_body_new_animation() -> impl Filter<Extract = (AnimationDesc,), Error = 
 
 fn json_body_save_animation() -> impl Filter<Extract = (AnimationSaveDesc,), Error = warp::Rejection> + Clone {
     // Perform coercion of incoming data into a AnimationDesc
+    warp::body::content_length_limit(1024 * 16)
+        .and(warp::body::json())
+}
+
+fn json_body_update_animation() -> impl Filter<Extract = (AnimationUpdateDesc,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(1024 * 16)
         .and(warp::body::json())
 }
@@ -89,4 +102,34 @@ async fn save_animation_limbs_impl(save_desc: AnimationSaveDesc, db_pool: Pool<S
             )
         }
     }   
+}
+
+async fn update_animation_impl(guid: String, aus: AnimationUpdateDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let anim = match animation_queries::get_animation_from_guid(guid, &mut db_pool.clone()).await {
+        Ok(anim) => {anim},
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    };
+
+    match animation_queries::update_animation_details(anim.id, aus, &mut db_pool.clone()).await {
+        Ok(_) => {},
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string()}))
+                )
+            )
+        }
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": ""}))
+        )
+    )
 }

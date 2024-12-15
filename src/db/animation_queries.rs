@@ -6,7 +6,7 @@ use uuid::Uuid;
 use serde_json::json;
 use std::fs;
 
-use super::animation_models::{Animation, AnimationDesc, AnimationDetails, AnimationLimb, AnimationLimbDetails, AnimationLimbMove, AnimationSaveLimbDesc };
+use super::animation_models::{Animation, AnimationDesc, AnimationDetails, AnimationLimb, AnimationLimbDetails, AnimationLimbMove, AnimationSaveLimbDesc, AnimationUpdateDesc };
 use super::DBError;
 
 
@@ -74,7 +74,7 @@ pub async fn get_animation_details_from_guid(guid: String, pool: &mut Pool<Sqlit
     let mut ret = AnimationDetails::from_animation_model(&animation);
 
     let animation_limbs = match sqlx::query_as::<_,AnimationLimb>(
-        "SELECT * FROM animation_limb WHERE animation_id=$1"
+        "SELECT * FROM animation_limb WHERE animation_id=$1 ORDER BY id ASC"
         )
         .bind(animation.id)
         .fetch_all(&*pool).await {
@@ -122,8 +122,7 @@ pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>
 
 pub async fn get_limb_list_for_animation_id(id: i32, pool: &mut Pool<Sqlite> ) -> Result<Vec::<AnimationLimb>, DBError> {
     let animation_limbs = match sqlx::query_as::<_,AnimationLimb>(
-        "SELECT * FROM animation_limb WHERE animation_id=$1
-        "
+        "SELECT * FROM animation_limb WHERE animation_id=$1 ORDER BY id ASC"
         )
         .bind(id)
         .fetch_all(&*pool).await {
@@ -193,5 +192,20 @@ pub async fn update_limbs_for_animation(id: i32, limbs: Vec::<AnimationSaveLimbD
                 };
         }
     }
+    Ok(())
+}
+
+pub async fn update_animation_details(id: i32, aus: AnimationUpdateDesc, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    match sqlx::query(
+        "UPDATE animation SET width=$1, height=$2, length=$3 WHERE id=$4"
+        )
+        .bind(aus.width)
+        .bind(aus.height)
+        .bind(aus.time_length)
+        .bind(id)
+        .execute(&*pool).await {
+            Ok(res) => res,
+            Err(err) => return Err(DBError::UnknownError(err.to_string()))
+        };
     Ok(())
 }

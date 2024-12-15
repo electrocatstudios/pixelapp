@@ -47,6 +47,13 @@ pub struct AnimationSaveDesc {
     pub limbs: Vec::<AnimationSaveLimbDesc>
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AnimationUpdateDesc {
+    pub width: i32,
+    pub height: i32,
+    pub time_length: i32
+}
+
 // Incoming JSON messages for saving
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AnimationSaveLimbDesc {
