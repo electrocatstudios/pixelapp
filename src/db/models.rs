@@ -11,7 +11,8 @@ pub struct PixelImage {
     pub height: i32,
     pub pixelwidth: i32,
     pub guid: String,
-    pub collection_id: Option<i32>
+    pub collection_id: Option<i32>,
+    pub animation_id: Option<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize)]

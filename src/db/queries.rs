@@ -86,7 +86,7 @@ pub async fn create_new_pixel_with_animation(data: PixelImageDesc, animation_gui
         None => None  
     };
 
-    let animation = match animation_queries::get_animation_from_guid(animation_guid, &mut pool).await {
+    let animation = match animation_queries::get_animation_from_guid(animation_guid, &mut pool.clone()).await {
         Ok(anim) => anim,
         Err(err) => return Err(DBError::DatabaseError(err.to_string()))
     };
@@ -112,7 +112,7 @@ pub async fn create_new_pixel_with_animation(data: PixelImageDesc, animation_gui
 
     for i in 0..frame_count {
         let inc = IncomingPixel::new(0,0,0,0,0,0.0, i);
-        match save_pixel_for_image(res_id, &inc, &mut pool).await {
+        match save_pixel_for_image(res_id, &inc, &mut pool.clone()).await {
             Ok(_) => {},
             Err(err) => return Err(DBError::DatabaseError(err.to_string()))
         };

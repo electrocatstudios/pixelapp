@@ -109,10 +109,11 @@ async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> 
         None => 5
     };
 
-    if anim_guid != "".to_string() {
+    // let mut pix_id = "".to_string();
+    let pix_id = if anim_guid != "".to_string() {
         // Create an image with a reference to the animation passed in
         // It also passes the number of frames, to prepare them in advance
-        let pix_id = match queries::create_new_pixel_with_animation(pixel, anim_guid, anim_frames, &mut db_pool.clone()).await {
+        match queries::create_new_pixel_with_animation(pixel, anim_guid, anim_frames, &mut db_pool.clone()).await {
             Ok(res) => res,
             Err(err) => {
                 return Ok(
@@ -121,9 +122,9 @@ async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> 
                     )
                 )
             }
-        };
+        }
     } else {
-        let pix_id = match queries::create_new_pixel(pixel, &mut db_pool.clone()).await {
+        match queries::create_new_pixel(pixel, &mut db_pool.clone()).await {
             Ok(res) => res,
             Err(err) => {
                 return Ok(
@@ -132,8 +133,8 @@ async fn create_new_pixel_impl(pixel: PixelImageDesc, db_pool: Pool<Sqlite>) -> 
                     )
                 )
             }
-        };
-    }
+        }
+    };
     
     Ok(
         Box::new(
@@ -332,7 +333,9 @@ async fn duplicate_image_impl(guid: String, duplicate_data: DuplicateImageData, 
         collection: new_coll,
         width: old_pixel.width,
         height: old_pixel.height,
-        pixelwidth: old_pixel.pixelwidth
+        pixelwidth: old_pixel.pixelwidth,
+        animation: None,
+        frame_count: None
     };
 
     let new_guid = match queries::create_new_pixel(new_pixel, &mut db_pool.clone()).await {
@@ -402,8 +405,11 @@ async fn newfromfile_impl(pixel_data: PixelSaveFile, db_pool: Pool<Sqlite>) -> R
         collection: None,
         width: pixel_data.width,
         height: pixel_data.height,
-        pixelwidth: pixel_data.pixelwidth
+        pixelwidth: pixel_data.pixelwidth,
+        animation: None,
+        frame_count: None
     };
+
     let pix_id = match queries::create_new_pixel(new_pix_data, &mut db_pool.clone()).await {
         Ok(res) => res,
         Err(err) => {
