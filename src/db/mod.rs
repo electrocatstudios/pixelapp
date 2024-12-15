@@ -6,7 +6,9 @@ use warp::Filter;
 use std::fmt;
 
 pub mod models;
+pub mod animation_models;
 pub mod queries;
+pub mod animation_queries;
 
 const DB_CONN_STRING: &str = "sqlite://pixel.db";
 

@@ -6,6 +6,7 @@ use uuid::Uuid;
 use std::fs;
 
 use crate::db::models::PixelImage;
+use super::animation_queries;
 use super::models::IncomingShader;
 use super::{DBError,models::{PixelImageDesc, PixelPixel, IncomingPixel,PixelShading,Collection}};
 
@@ -67,18 +68,80 @@ pub async fn create_new_pixel(data: PixelImageDesc, pool: &mut Pool<Sqlite>) -> 
             }
 }
 
+pub async fn create_new_pixel_with_animation(data: PixelImageDesc, animation_guid: String, frame_count: i32, pool: &mut Pool<Sqlite> ) -> Result<String, DBError> {
+    let guid: String = format!("{:?}", Uuid::new_v4());
+    let collection_id = match data.collection {
+        Some(id) => {
+            if id == 0 {
+                None
+            } else {
+                match get_collection_by_id(id, &mut pool.clone()).await {
+                    Ok(collection) => Some(collection.id),
+                    Err(err) => {
+                        return Err(DBError::DatabaseError(err.to_string()));
+                    }
+                }
+            }
+        },
+        None => None  
+    };
+
+    let animation = match animation_queries::get_animation_from_guid(animation_guid, &mut pool.clone()).await {
+        Ok(anim) => anim,
+        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    };
+
+    let res = match sqlx::query(
+        "INSERT INTO pixelimage(name, description, \
+        width, height, pixelwidth, guid, collection_id, animation_id) VALUES \
+        ($1, $2, $3, $4, $5, $6, $7, $8)"
+        )
+        .bind(&data.name)
+        .bind(&data.description)
+        .bind(&data.width)
+        .bind(&data.height)
+        .bind(&data.pixelwidth)
+        .bind(&guid.clone())
+        .bind(&collection_id)
+        .bind(&animation.id)
+        .execute(&*pool).await {
+            Ok(res) => res,
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    let res_id = res.last_insert_rowid() as i32;
+
+    for i in 0..frame_count {
+        let inc = IncomingPixel::new(0,0,0,0,0,0.0, i);
+        match save_pixel_for_image(res_id, &inc, &mut pool.clone()).await {
+            Ok(_) => {},
+            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+        };
+    }
+
+    Ok(guid)
+}
+
 pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) -> Result<serde_json::Value, DBError> {
     let pixel = match get_pixel_details(guid, pool).await {
         Ok(pix) => pix,
         Err(err) => return Err(DBError::UnknownError(err.to_string()))
     };
-        
+    
     let toolbar: String = fs::read_to_string("templates/snippets/toolbar.html").unwrap().parse().unwrap();
     let menubar: String = fs::read_to_string("templates/snippets/menubar.html").unwrap().parse().unwrap();
     let coll_id = match pixel.collection_id {
         Some(id) => format!("{}", id),
         None => "null".to_string()
-    };    
+    };
+
+    let animation_id = match pixel.animation_id {
+        Some(id) => match animation_queries::get_animation_from_id(id, pool).await {
+            Ok(a) => format!("{}", a.guid),
+            Err(_) => "".to_string()
+        },
+        None => "".to_string()
+    };
+    
     let ret = &json!({
         "name": &pixel.name,
         "width": &pixel.width,
@@ -87,11 +150,13 @@ pub async fn get_pixel_details_as_json(guid: String, pool: &mut Pool<Sqlite>) ->
         "guid": &pixel.guid,
         "toolbar": &toolbar,
         "menubar": &menubar,
-        "collection_id": &coll_id
+        "collection_id": &coll_id,
+        "animation_guid": &animation_id
     });
 
     Ok(ret.clone())
 }
+
 
 pub async fn get_pixel_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<PixelImage, DBError> {
     match sqlx::query_as::<_,PixelImage>(
@@ -287,12 +352,12 @@ pub async fn save_pixel_for_image(image_id: i32, incoming: &IncomingPixel, pool:
         .fetch_one(&*pool).await {
             Ok(pix) => pix,
             Err(_) => {
-                log::debug!("Pixel being created");
+                // log::debug!("Pixel being created");
                 // Pixel doesn't exist so create it
                 return create_pixel_for_image(image_id, incoming, &mut pool.clone()).await;
             }
         };
-    log::debug!("Found pixel so updating");
+    // log::debug!("Found pixel so updating");
     update_pixel_for_image(pixel.id, incoming, &mut pool.clone()).await
 } 
 
@@ -419,7 +484,7 @@ pub async fn get_collection_by_id(collection_id: i32, pool: &mut Pool<Sqlite>) -
     Ok(collection)
 }
 
-pub async fn make_new_collection(name: String, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
+pub async fn _make_new_collection(name: String, pool: &mut Pool<Sqlite>) -> Result<i32, DBError> {
     // Check if already exists
     match get_collection_by_name(name.clone(), &mut pool.clone()).await {
         Ok(c) => {

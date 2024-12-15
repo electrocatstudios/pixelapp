@@ -1,0 +1,37 @@
+.limb_add_box {
+    background-color: rgb(233, 221, 206);
+    color: rgb(18, 18, 18);
+    border-radius: 5px;
+    /* width: 100%; */
+    /* min-height: 60px; */
+    /* height: 0px; */
+    padding-top: 20px;
+    transition: all 0.4s ease;
+}
+
+.limb_add_box_closed {
+    overflow: hidden;
+    /* transition: all 0.4s ease; */
+    height: 0px;
+    padding-top: 0px;
+    
+}
+
+.move_card {
+    margin-top:10px;
+    padding-top: 10px;
+    background-color: rgb(237, 224, 189);
+    border-radius: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    color: rgb(19, 18, 18);
+}
+
+.move_card input {
+    width: 40px;
+    margin-right: 5px;
+}
+
+.move_card button {
+    margin-right: 5px;
+}

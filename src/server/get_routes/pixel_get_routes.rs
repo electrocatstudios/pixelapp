@@ -13,26 +13,10 @@ use crate::db::{queries, models::{PixelPixel,IncomingPixel,IncomingShader}};
 use crate::utils::{color_to_hex_string,hex_string_to_color};
 use crate::image::gif;
 
-use super::query_params::{RenderQuery, GifRenderQuery};
+use crate::server::query_params::{RenderQuery, GifRenderQuery};
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
-    let cors = warp::cors()
-    .allow_any_origin().allow_methods(&[warp::http::Method::GET, warp::http::Method::POST]);
-
-    let heartbeat = warp::path!("heartbeat")
-        .map(|| format!("ok"))
-        .with(cors);
-    
-    // GET 404 - catch all
-    let default = warp::any().map(|| {
-        let body: String = fs::read_to_string("templates/404.html").unwrap().parse().unwrap();
-        let mut handlebars = Handlebars::new();
-        handlebars.register_template_string("tpl_1", body).unwrap();
-        warp::reply::html(
-            handlebars.render("tpl_1", &json!({})).unwrap()
-        )
-    });
-
+   
     // GET /home - get the main front page
     let home = warp::path::end().map(|| {
         let body: String = fs::read_to_string("templates/index.html").unwrap().parse().unwrap();
@@ -153,8 +137,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_collection_list = warp::path!("api" / "collection")
         .and(db_conn.clone())
         .and_then(get_collection_list_impl);
-
-
+ 
     // GET /js/<file> - get named js file
     let get_js = warp::path("js").and(warp::fs::dir("./assets/js/"));
     // GET /css/<file> - get named css file
@@ -165,8 +148,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_img = warp::path("img").and(warp::fs::dir("./assets/img/"));
     
 
-    heartbeat 
-        .or(get_img)
+    get_img 
         .or(get_js)
         .or(get_css)
         .or(get_font)
@@ -187,7 +169,6 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_gif_render)
         .or(get_render_info)
         .or(home)
-        .or(default)
         .boxed()
 }
 
@@ -209,7 +190,6 @@ async fn render_pixel_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dy
             )
         )
     )
-   
 }
 
 async fn get_pixel_list(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
@@ -247,6 +227,7 @@ async fn get_collection_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply
         }
     }
 }
+
 
 async fn get_pixel_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     let pixel = match queries::get_pixel_details(guid, &mut db_pool.clone()).await {

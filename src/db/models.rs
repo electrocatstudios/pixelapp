@@ -11,7 +11,8 @@ pub struct PixelImage {
     pub height: i32,
     pub pixelwidth: i32,
     pub guid: String,
-    pub collection_id: Option<i32>
+    pub collection_id: Option<i32>,
+    pub animation_id: Option<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,7 +22,9 @@ pub struct PixelImageDesc {
     pub collection: Option<i32>,
     pub width: i32,
     pub height: i32,
-    pub pixelwidth: i32
+    pub pixelwidth: i32,
+    pub animation: Option<String>,
+    pub frame_count: Option<i32>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -114,6 +117,17 @@ pub struct NewCollectionData {
 }
 
 impl IncomingPixel {
+    pub fn new(x: i32, y: i32, r: i32, g: i32, b: i32, alpha: f64, frame: i32) -> Self {
+        IncomingPixel {
+            x: x,
+            y: y,
+            r: r,
+            g: g,
+            b: b,
+            alpha: alpha,
+            frame: frame
+        }
+    }
     pub fn from_pixel_pixel(pixel: &PixelPixel) -> Self {
         IncomingPixel {
             x: pixel.x,
