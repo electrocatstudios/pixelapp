@@ -38,7 +38,7 @@ function refresh_anim_list() {
         output += "<div class='row choose_menu_items'>"
         // output += "<a href='/pixelapp/" + p.id + "'>"
         output += "<div class='column choose_menu_item'>" + p.name + "<br>";
-        // output += "<br><img src='/img/" + p.guid + "/png' height='100'><br>"
+        output += "<br><img src='/img/animation_gif/" + p.guid + "' height='250'><br>"
         output += "<button onclick='load_animation(\""+ p.guid + "\")'>Open</button>";
         // output += "<button onclick='load_render_page(\"" + p.guid + "\")'>Render</button>";
         // output += "<button onclick='load_png_image(\"" + p.guid + "\")'>PNG</button>";
@@ -106,9 +106,9 @@ function load_animation(id){
 //       })
 // }
 
-// function update_search_prompt() {
-//     var val = $('#search').val();
-//     search_prompt = val;
+function update_search_prompt() {
+    var val = $('#search').val();
+    search_prompt = val;
 
-//     refresh_image_list();
-// }
+    refresh_anim_list();
+}

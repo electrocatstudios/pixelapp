@@ -143,3 +143,15 @@ pub struct AnimationLimbMoveDetails {
     pub length: f64,
     pub perc: f64
 }
+
+impl AnimationLimbMoveDetails {
+    pub fn default() -> Self {
+        AnimationLimbMoveDetails {
+            x: 0.0,
+            y: 0.0,
+            rot: 0.0,
+            length: 0.0,
+            perc: 0.0
+        }
+    }
+}
