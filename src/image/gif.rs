@@ -154,7 +154,7 @@ pub async fn render_animationgif(guid: String, db_pool: Pool<Sqlite>) -> Result<
         let perc = i as f64 / frames as f64;
 
         let background_color = Rgba([0, 0, 0, 255]);
-        let mut nxt = RgbaImage::from_pixel(animation.width as u32, animation.height as u32, background_color);
+        let mut nxt: image::ImageBuffer<Rgba<u8>, Vec<u8>> = RgbaImage::from_pixel(animation.width as u32, animation.height as u32, background_color);
 
         for limb in animation.animation_limbs.iter() {
             // Find index of pieces
