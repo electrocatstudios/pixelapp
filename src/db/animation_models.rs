@@ -162,3 +162,18 @@ impl AnimationLimbMoveDetails {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+pub struct LimbEndPoint {
+    pub x: f32,
+    pub y: f32
+}
+
+impl LimbEndPoint {
+    pub fn new(x: f32, y: f32) -> Self {
+        LimbEndPoint {
+            x: x,
+            y: y
+        }
+    }
+}

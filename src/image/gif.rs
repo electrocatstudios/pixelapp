@@ -1,5 +1,6 @@
 use sqlx::Sqlite;
 use sqlx::pool::Pool;
+use std::collections::HashMap;
 use std::io::Cursor;
 use image::{Pixel, Rgba, RgbaImage};
 use imageproc::drawing::draw_line_segment_mut;
@@ -8,7 +9,7 @@ use gif::{Frame, Encoder, Repeat};
 
 use std::vec::Vec;
 
-use crate::db::animation_models::AnimationLimbMoveDetails;
+use crate::db::animation_models::{AnimationLimbMoveDetails, LimbEndPoint};
 use crate::db::{animation_queries, queries}; //
 use crate::server::query_params::{GifRenderQuery, GifRenderType};
 use crate::utils::{self, *};
@@ -155,9 +156,11 @@ pub async fn render_animationgif(guid: String, db_pool: Pool<Sqlite>) -> Result<
 
         let background_color = Rgba([0, 0, 0, 255]);
         let mut nxt: image::ImageBuffer<Rgba<u8>, Vec<u8>> = RgbaImage::from_pixel(animation.width as u32, animation.height as u32, background_color);
+        let mut parent_list = HashMap::<&String, LimbEndPoint>::new();
 
         for limb in animation.animation_limbs.iter() {
             // Find index of pieces
+            
             if limb.animation_limb_moves.len() < 1 {
                 continue;
             }
@@ -166,23 +169,36 @@ pub async fn render_animationgif(guid: String, db_pool: Pool<Sqlite>) -> Result<
             if limb.animation_limb_moves.len() < 2 || perc == 0.0 {
                 // We only have one for this limb - just use that or first frame
                 let lm = limb.animation_limb_moves[0];
-                let start = (lm.x as f32, lm.y as f32);
+                let start = if limb.parent != "".to_string() {
+                    let p = parent_list.get(&limb.parent).unwrap();
+                    (lm.x as f32 + p.x, lm.y as f32 + p.y)
+                }else {    
+                    (lm.x as f32, lm.y as f32)
+                };
+
                 let end = (
-                    (lm.x + (lm.rot.sin() * lm.length)) as f32,
-                    (lm.y + (lm.rot.cos() * lm.length)) as f32,
+                    start.0 + (lm.rot.sin() * lm.length) as f32 ,
+                    start.1 + (lm.rot.cos() * lm.length) as f32,
                 );
 
                 draw_line_segment_mut(&mut nxt, start, end, col);
+                parent_list.insert(&limb.name, LimbEndPoint::new(end.0, end.1));
             } else if perc == 1.0 {
                 // Last frame - use last frame details
                 let lm = limb.animation_limb_moves.last().unwrap();
-                let start = (lm.x as f32, lm.y as f32);
+                let start = if limb.parent != "".to_string() {
+                    let p = parent_list.get(&limb.parent).unwrap();
+                    (lm.x as f32 + p.x, lm.y as f32 + p.y)
+                }else {    
+                    (lm.x as f32, lm.y as f32)
+                };
                 let end = (
-                    (lm.x + (lm.rot.sin() * lm.length)) as f32,
-                    (lm.y + (lm.rot.cos() * lm.length)) as f32,
+                    start.0 + (lm.rot.sin() * lm.length) as f32 ,
+                    start.1 + (lm.rot.cos() * lm.length) as f32,
                 );
 
                 draw_line_segment_mut(&mut nxt, start, end, col);
+                parent_list.insert(&limb.name, LimbEndPoint::new(end.0, end.1));
             } else {
                 let mut prev_limb = AnimationLimbMoveDetails::default();
                 let mut next_limb = AnimationLimbMoveDetails::default();
@@ -205,12 +221,20 @@ pub async fn render_animationgif(guid: String, db_pool: Pool<Sqlite>) -> Result<
                     let y = prev_limb.y + (adjust_perc * (next_limb.y - prev_limb.y));
                     let rot = prev_limb.rot + (adjust_perc * (next_limb.rot - prev_limb.rot));
                     let length = prev_limb.length + (adjust_perc * (next_limb.length - prev_limb.length));
-                    let start = (x as f32,y as f32);
+                    
+                    let start = if limb.parent != "".to_string() {
+                        let p = parent_list.get(&limb.parent).unwrap();
+                        (x as f32 + p.x, y as f32 + p.y)
+                    }else {    
+                        (x as f32, y as f32)
+                    };
                     let end = (
-                        (x + (rot.sin() * length)) as f32,
-                        (y + (rot.cos() * length)) as f32,
+                        start.0 + (rot.sin() * length) as f32 ,
+                        start.1 + (rot.cos() * length) as f32,
                     );
+
                     draw_line_segment_mut(&mut nxt, start, end, col);
+                    parent_list.insert(&limb.name, LimbEndPoint::new(end.0, end.1));
                 }
 
             }
