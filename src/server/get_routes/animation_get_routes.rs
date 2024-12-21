@@ -29,6 +29,18 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // Get /video_upload - the video upload page
+    let video_upload_page = warp::path("video_upload").map( || {
+        let body: String = fs::read_to_string("templates/video_upload.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_2", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_2", &json!({})).unwrap()
+        )
+   
+    });
+
+    
     // Get /animation/<guid> - get the page for an existing animation
     let animation_page = warp::path!("animation" / String)
         .and(db_conn.clone())
@@ -63,6 +75,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(animation_page)
         .or(get_gif_render)
         .or(get_image_render_single)
+        .or(video_upload_page)
         .boxed()
 }
 

@@ -1,6 +1,11 @@
 use serde_json::json;
+use futures::{StreamExt, TryStreamExt};
+// use std::convert::Infallible;
+use std::fs;
 
-use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
+use bytes::BufMut;
+use uuid::Uuid;
+use warp::{filters::{multipart::FormData, BoxedFilter}, Filter, Rejection, Reply};
 use sqlx::{SqlitePool, Pool, Sqlite};
 
 use crate::db::{animation_models::{AnimationDesc, AnimationSaveDesc, AnimationUpdateDesc}, animation_queries};
@@ -30,9 +35,16 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(update_animation_impl);
 
+    // POST /api/video_upload
+    let video_upload = warp::post()
+        .and(warp::path!("api" / "video_upload"))
+        .and(warp::multipart::form().max_length(5_000_000))
+        .and_then(video_upload_impl);
+
     create_new_animation
         .or(save_animation_limbs)
         .or(update_animation_details)
+        .or(video_upload)
         .boxed()
 }
 
@@ -130,6 +142,59 @@ async fn update_animation_impl(guid: String, aus: AnimationUpdateDesc, db_pool: 
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": ""}))
+        )
+    )
+}
+
+async fn video_upload_impl(form: FormData) -> Result<Box<dyn Reply>, Rejection> {
+    let mut parts = form.into_stream();
+    let uuid = Uuid::new_v4();
+    while let Some(Ok(p)) = parts.next().await {
+        if p.name() == "file" {
+            let content_type = p.content_type();
+            let file_ending;
+            match content_type {
+                Some(file_type) => match file_type {
+                    "video/mp4" => {
+                        file_ending = "mp4";
+                    }
+                    v => {
+                        eprintln!("invalid file type found: {}", v);
+                        return Err(warp::reject::reject());
+                    }
+                },
+                None => {
+                    eprintln!("file type could not be determined");
+                    return Err(warp::reject::reject());
+                }
+            }
+
+            let value = p
+                .stream()
+                .try_fold(Vec::new(), |mut vec, data| {
+                    vec.put(data);
+                    async move { Ok(vec) }
+                })
+                .await
+                .map_err(|e| {
+                    eprintln!("reading file error: {}", e);
+                    warp::reject::reject()
+                })?;
+
+            fs::create_dir_all("./files")?;
+
+            let file_name = format!("./files/{}.{}", uuid.clone(), file_ending);
+            tokio::fs::write(&file_name, value).await.map_err(|e| {
+                eprint!("error writing file: {}", e);
+                warp::reject::reject()
+            })?;
+            println!("created file: {}", file_name);
+        }
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "file_id": uuid.to_string()}))
         )
     )
 }
