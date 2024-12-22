@@ -68,6 +68,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_image_animationrender_single_impl);
 
+    // GET /api/video - get a list of the videos available
+    let get_video_list = warp::path!("api" / "video")
+        .and_then(get_video_list_impl);
+
     new_animation_page
         .or(get_animation_list)
         .or(get_animation)
@@ -179,6 +183,27 @@ async fn get_image_animationrender_single_impl(guid: String, frame: u32, total_f
     Ok(
         Box::new(
             warp::reply::with_header(ret, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
+    let paths = fs::read_dir("./files/videos/processed").unwrap();
+
+    for path in paths {
+        match path.as_ref().unwrap().file_type() {
+            Ok(ft) => {
+                if ft.is_dir() {
+                    println!("Name: {}", path.unwrap().path().display())
+                }
+            },
+            Err(_) => {}
+        }        
+    }
+    
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "videos": []}))
         )
     )
 }
