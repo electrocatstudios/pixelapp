@@ -9,6 +9,7 @@ pub mod models;
 pub mod animation_models;
 pub mod queries;
 pub mod animation_queries;
+pub mod video_models;
 
 const DB_CONN_STRING: &str = "sqlite://pixel.db";
 

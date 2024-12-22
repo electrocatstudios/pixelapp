@@ -1,6 +1,7 @@
 use std::fs; 
 
 pub mod proc;
+pub mod video_utils;
 
 pub struct VideoUploadDetails {
     pub guid: String,

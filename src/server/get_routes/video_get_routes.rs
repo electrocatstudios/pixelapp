@@ -5,6 +5,8 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
+use crate::{db::video_models::VideoModel, video::video_utils::get_image_count_for_video};
+
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // Get /video_upload - the video upload page
@@ -41,6 +43,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_video_list = warp::path!("api" / "video")
         .and_then(get_video_list_impl);
 
+    // GET /api/frame/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
+    let get_frame_indexes = warp::path!("api" / "frames" / String / i32)
+        .and_them(get_frame_indexes_impl);
+
     video_upload_page
         .or(video_listing_page)
         .or(video_menu_page)
@@ -51,12 +57,17 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
 async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
     let paths = fs::read_dir("./files/videos/processed").unwrap();
-
+    // println!("Inside the get video list dir");
+    let mut ret = Vec::<VideoModel>::new();
     for path in paths {
         match path.as_ref().unwrap().file_type() {
             Ok(ft) => {
                 if ft.is_dir() {
-                    println!("Name: {}", path.unwrap().path().display())
+                    let filename = path.unwrap().file_name().into_string().unwrap();
+                    match VideoModel::from_guid(filename) {
+                        Ok(vm) => ret.push(vm),
+                        Err(err) => println!("Error getting video details: {}", err)
+                    }
                 }
             },
             Err(_) => {}
@@ -65,7 +76,33 @@ async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
     
     Ok(
         Box::new(
-            warp::reply::json(&json!({"status": "ok", "message": "", "videos": []}))
+            warp::reply::json(&json!({"status": "ok", "message": "", "videos": ret}))
+        )
+    )
+}
+
+async fn get_frame_indexes_impl(guid: String, max_frames: i32) -> Result<Box<dyn Reply>, Rejection> {
+    let frame_count = match get_image_count_for_video(guid.clone()) {
+        Ok(c) => c,
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err, "frames"=[], "frame_count": 0 }))
+                )
+            )
+        }
+    };
+
+    let mut frames = Vec::<usize>::new();
+    if max_frames >= frame_count as i32 {
+        frames = (1..frame_count).collect();
+    } else if frame_count > 0 {
+        // let step = max_fra
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "frames": frames, "frame_count": frame_count}))
         )
     )
 }
