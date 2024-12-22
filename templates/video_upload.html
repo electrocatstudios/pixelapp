@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/js/jquery.min.js"></script>
+
+    <link rel='stylesheet' href='/css/pixelapp.css?t=114'>
+
+    <title>Saved Animations</title>
+
+    <script type="text/javascript" src="/js/upload_video.js"></script>
+    <script type='text/javascript' src='/js/keyHandlerUtils.js?t=124'></script>
+    <script type='text/javascript' src='/js/utils.js'></script>
+
+    <link href='/css/website.css' rel='stylesheet'>
+    <link href='/css/skeleton.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+</head>
+
+<body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>   
+    <br>
+
+    <div class='container'>
+        <div class='row'>
+            <div id='message_banner' style='text-align:center'>
+                <h1>Upload Video</h1>
+            </div>
+        </div>
+    </div>
+
+    <br><br>
+    <div id="coll_container" class="container">
+
+        <div class='row choose_menu_items'>
+            <div class='choose_menu_item'>
+                <h2>Details</h2>
+                <input id='name' placeholder="Name" type='text'><br>
+                <input id='description' placeholder='Description (optional)' type='text'><br>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class='choose_menu_item'>
+                <h2>Load Video from File</h2>
+                <div id='errorfileupload' style='color:red;'></div>
+                <input type='file' id='filename'> <button onclick='upload_video_file()'>Load</button>    
+            </div>
+        </div>        
+    </div>
+
+    <div class='container'>
+        <div class="row choose_menu_items">
+            <a href='/'>
+                <div class='choose_menu_item'>
+                    Back
+                </div>
+            </a>
+        </div>
+    </div>
+  
+</body>
+</html>

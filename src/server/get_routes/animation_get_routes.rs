@@ -29,6 +29,18 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // Get /video_upload - the video upload page
+    let video_upload_page = warp::path("video_upload").map( || {
+        let body: String = fs::read_to_string("templates/video_upload.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_2", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_2", &json!({})).unwrap()
+        )
+   
+    });
+
+    
     // Get /animation/<guid> - get the page for an existing animation
     let animation_page = warp::path!("animation" / String)
         .and(db_conn.clone())
@@ -56,6 +68,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_image_animationrender_single_impl);
 
+    // GET /api/video - get a list of the videos available
+    let get_video_list = warp::path!("api" / "video")
+        .and_then(get_video_list_impl);
+
     new_animation_page
         .or(get_animation_list)
         .or(get_animation)
@@ -63,6 +79,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(animation_page)
         .or(get_gif_render)
         .or(get_image_render_single)
+        .or(video_upload_page)
         .boxed()
 }
 
@@ -166,6 +183,27 @@ async fn get_image_animationrender_single_impl(guid: String, frame: u32, total_f
     Ok(
         Box::new(
             warp::reply::with_header(ret, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
+    let paths = fs::read_dir("./files/videos/processed").unwrap();
+
+    for path in paths {
+        match path.as_ref().unwrap().file_type() {
+            Ok(ft) => {
+                if ft.is_dir() {
+                    println!("Name: {}", path.unwrap().path().display())
+                }
+            },
+            Err(_) => {}
+        }        
+    }
+    
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "videos": []}))
         )
     )
 }

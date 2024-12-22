@@ -19,6 +19,13 @@ cargo run -- --debug --port=5000
 ```
 Note: You can leave the port off, the default is `8888`
 
+## Install FFMPEG
+If you want to use the animation tracing functionality on Windows you will need to install ffmpeg and add it to path.
+
+[https://phoenixnap.com/kb/ffmpeg-windows](https://phoenixnap.com/kb/ffmpeg-windows)
+
+If using *nix then please use your package manager.
+
 ## Roadmap
 The current roadmap of items I'll be working on.
 
