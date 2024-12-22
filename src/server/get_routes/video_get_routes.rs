@@ -5,9 +5,6 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::db::animation_queries;
-use crate::image::{gif, png};
-
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // Get /video_upload - the video upload page
