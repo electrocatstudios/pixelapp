@@ -27,9 +27,19 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // GET /menu - get the pixel menu
+    let get_pixel_menu = warp::path("menu").map(|| {
+        let body: String = fs::read_to_string("templates/pixel/pixel_menu.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_1", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_1", &json!({})).unwrap()
+        )
+    });
+
     // Get /new - get the page for creating a new pixel image
     let new_image_page = warp::path("new").map(|| {
-        let body: String = fs::read_to_string("templates/setuppixel.html").unwrap().parse().unwrap();
+        let body: String = fs::read_to_string("templates/pixel/setuppixel.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_1", body).unwrap();
         warp::reply::html(
@@ -39,7 +49,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
     // GET /new_collection - get the new collection page
     let new_collection_page = warp::path("new_collection").map(|| {
-        let body: String = fs::read_to_string("templates/newcollection.html").unwrap().parse().unwrap();
+        let body: String = fs::read_to_string("templates/pixel/newcollection.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_1", body).unwrap();
         warp::reply::html(
@@ -49,7 +59,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
     // Get /load
     let load_image_page = warp::path("load").map(|| {
-        let body: String = fs::read_to_string("templates/saved.html").unwrap().parse().unwrap();
+        let body: String = fs::read_to_string("templates/pixel/saved.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_2", body).unwrap();
         warp::reply::html(
@@ -59,7 +69,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
     // GET /render/<guid>
     let load_render_page = warp::path!("render" / String).map(|guid: String| {
-        let body: String = fs::read_to_string("templates/render.html").unwrap().parse().unwrap();
+        let body: String = fs::read_to_string("templates/pixel/render.html").unwrap().parse().unwrap();
         let mut handlebars = Handlebars::new();
         handlebars.register_template_string("tpl_3", body).unwrap();
         warp::reply::html(
@@ -149,6 +159,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     
 
     get_img 
+        .or(get_pixel_menu)
         .or(get_js)
         .or(get_css)
         .or(get_font)
@@ -173,7 +184,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 }
 
 async fn render_pixel_page(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-    let body: String = fs::read_to_string("templates/pixel.html").unwrap().parse().unwrap();
+    let body: String = fs::read_to_string("templates/pixel/pixel.html").unwrap().parse().unwrap();
     let page_json = match queries::get_pixel_details_as_json(guid, &mut db_pool.clone()).await {
         Ok(page_json) => page_json,
         Err(err) => {
