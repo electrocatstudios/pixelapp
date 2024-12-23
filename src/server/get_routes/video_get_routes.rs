@@ -45,13 +45,14 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
     // GET /api/frame/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
     let get_frame_indexes = warp::path!("api" / "frames" / String / i32)
-        .and_them(get_frame_indexes_impl);
+        .and_then(get_frame_indexes_impl);
 
     video_upload_page
         .or(video_listing_page)
         .or(video_menu_page)
         .or(get_video_list)
         .or(video_upload_page)
+        .or(get_frame_indexes)
         .boxed()
 }
 
@@ -81,23 +82,36 @@ async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
     )
 }
 
+const MAX_FRAME_LIMIT: i32 = 50;
+
 async fn get_frame_indexes_impl(guid: String, max_frames: i32) -> Result<Box<dyn Reply>, Rejection> {
     let frame_count = match get_image_count_for_video(guid.clone()) {
         Ok(c) => c,
         Err(err) => {
             return Ok(
                 Box::new(
-                    warp::reply::json(&json!({"status": "fail", "message": err, "frames"=[], "frame_count": 0 }))
+                    warp::reply::json(&json!({"status": "fail", "message": err, "frames": [], "frame_count": 0 }))
                 )
             )
         }
+    };
+
+    let max_frames = if max_frames > MAX_FRAME_LIMIT {
+        MAX_FRAME_LIMIT
+    } else {
+        max_frames
     };
 
     let mut frames = Vec::<usize>::new();
     if max_frames >= frame_count as i32 {
         frames = (1..frame_count).collect();
     } else if frame_count > 0 {
-        // let step = max_fra
+        let step = frame_count as f64 / max_frames as f64;
+        let mut cur = 1.0;
+        while cur < frame_count as f64 {
+            frames.push(cur as usize);
+            cur += step;
+        }
     }
 
     Ok(
