@@ -149,7 +149,7 @@ impl VideoFrameQuery {
         }
     }
 
-    pub fn default() -> Self {
+    pub fn _default() -> Self {
         VideoFrameQuery {
             start: 0,
             end: 0,

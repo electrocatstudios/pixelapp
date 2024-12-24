@@ -721,7 +721,6 @@ async fn get_image_render_single_impl(guid: String, frame: u32, _direction: Stri
 }
 
 async fn get_gif_render_impl(guid: String, query_string: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
-       
     let query = GifRenderQuery::new(query_string);
 
     let bytes: Vec<u8> = match gif::render_gif(guid, query, db_pool).await {
@@ -731,7 +730,7 @@ async fn get_gif_render_impl(guid: String, query_string: String, db_pool: Pool<S
             return Err(warp::reject::not_found());
         }
     };
-    
+
     Ok(
         Box::new(
             warp::reply::with_header(bytes, "Content-Type", "image/gif")
