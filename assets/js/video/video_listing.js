@@ -16,6 +16,7 @@ $(document).ready(function() {
                 output += "<div class='column choose_menu_item'><p>Name: " + v.name + "</p>";
                 output += "<p>Description: " + v.description + "</p>";
                 output += "<p>Frames: " + v.frames + "</p>";
+                output += "<button onclick='load_video_view_page(\"" + v.guid + "\")'>Create View</button>";
                 // output += "<button onclick='load_animation(\""+ p.guid + "\")'>Open</button>";
                 output += "</div>";
                 output += "</div>";
@@ -29,3 +30,7 @@ $(document).ready(function() {
     })
 
 });
+
+function load_video_view_page(guid) {
+    window.location.href='/video_view/' + guid;
+}
