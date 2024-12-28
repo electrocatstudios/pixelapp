@@ -23,6 +23,11 @@ function create_animation(){
         length: parseInt(length),
     }
 
+    var view_guid = $('#sel_view').val();
+    if(view_guid !== undefined && view_guid !== null && view_guid !== "") {
+        data['view_guid'] = view_guid;
+    }
+
     var url = '/api/animation_new';
     $.ajax({
         url: url,

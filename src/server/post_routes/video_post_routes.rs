@@ -39,8 +39,6 @@ fn json_body_view_create() -> impl Filter<Extract = (ViewCreateDesc,), Error = w
 // --- End JSON Parsers
 
 async fn video_upload_impl(form: FormData) -> Result<Box<dyn Reply>, Rejection> {
-
-    // println!("We are in the video upload func");
     let mut parts = form.into_stream();
     let uuid = Uuid::new_v4();
     let mut video_upload_details = VideoUploadDetails::new(format!("{}",uuid.clone()));
@@ -138,6 +136,7 @@ async fn video_upload_impl(form: FormData) -> Result<Box<dyn Reply>, Rejection> 
 
 async fn view_create_impl(vcd: ViewCreateDesc, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
     // Create new view in db
+    log::info!("Creating view {}", vcd.name.clone());
     let vid_id = match video_queries::create_new_view(vcd.name, vcd.guid.clone(), &mut db_pool.clone()).await {
         Ok(id) => id,
         Err(err) => {
@@ -149,7 +148,6 @@ async fn view_create_impl(vcd: ViewCreateDesc, db_pool: Pool<Sqlite>) -> Result<
         }
     };
     
-    // let vid_guid = vcd.guid.clone();
     // Cycle through each frame and cut out the piece described - then store in db
     for f in vcd.frames.iter() {
         // Get the image data for the frame as vec<u8>

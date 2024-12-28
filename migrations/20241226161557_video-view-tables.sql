@@ -15,3 +15,5 @@ CREATE TABLE IF NOT EXISTS video_view_frame (
     height INTEGER,
     img BLOB
 );
+
+ALTER TABLE animation ADD COLUMN view_id INT DEFAULT NULL;

@@ -9,6 +9,7 @@ pub struct Animation {
     pub height: i32,
     pub length: i32,
     pub guid: String,
+    pub view_id: Option<i32>
 }
 
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
@@ -38,7 +39,8 @@ pub struct AnimationDesc {
     pub description: String,
     pub width: i32,
     pub height: i32,
-    pub length: i32
+    pub length: i32,
+    pub view_guid: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
