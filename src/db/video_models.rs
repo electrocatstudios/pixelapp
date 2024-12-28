@@ -51,3 +51,84 @@ impl VideoModel {
         Ok(ret)
     }
 }
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct VideoView {
+    pub id: i32,
+    pub view_guid: String,
+    pub video_guid: String,
+    pub name: String
+}
+
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
+pub struct VideoViewFrame {
+    pub id: i32,
+    pub video_view_id: i32,
+    pub frame: i32,
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub img: Vec::<u8>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VideoViewExt {
+    pub guid: String,
+    pub name: String,
+    pub frames: Vec::<VideoViewExtFrame>
+}
+
+impl VideoViewExt {
+    pub fn default() -> Self {
+        VideoViewExt {
+            guid: "".to_string(),
+            name: "".to_string(),
+            frames: Vec::new()
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VideoViewExtFrame{
+    pub frame_id: i32,
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub img: Vec::<u8>
+}
+
+impl VideoViewExtFrame {
+    pub fn new_from_video_view_frame(vvf: &VideoViewFrame) -> Self {
+        let mut out_vec = Vec::<u8>::new();
+        for val in &vvf.img {
+            out_vec.push(*val);
+        }
+        VideoViewExtFrame {
+            frame_id: vvf.frame,
+            x: vvf.x,
+            y: vvf.y,
+            width: vvf.width,
+            height: vvf.height,
+            img: out_vec
+        }
+    }
+}
+
+// Incoming request to create a view from a set of frames
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ViewCreateDesc{
+    pub guid: String,
+    pub name: String,
+    pub frames: Vec::<ViewCreateDescFrame>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ViewCreateDescFrame{
+    pub frame_id: i32,
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32
+}

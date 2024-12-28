@@ -9,7 +9,6 @@
 
     <script type="text/javascript" src="/js/video/view_create_main.js?t=123"></script>
     <script type="text/javascript" src="/js/video/view_create.js?t=123"></script>
-    <script type='text/javascript' src='/js/keyHandlerUtils.js?t=124'></script>
     <script type='text/javascript' src='/js/utils.js'></script>
 
     <link href='/css/website.css' rel='stylesheet'>
@@ -18,6 +17,14 @@
     <script>
         window.video_guid = "{{guid}}";
     </script>
+    <style>
+        .draw_cursor {
+            cursor: crosshair;
+        }
+        .normal_cursor {
+            cursor: auto;
+        }
+    </style>
 </head>
 
 <body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>   
@@ -44,12 +51,32 @@
 
         </div>
     </div>
-
+    <div id="debug"></div>
     <canvas id="canvas" width="100%" height="100%"> <!-- width="800" height="400" -->
         <p>Your browser does not support the canvas element.</p>
     </canvas>
+    
+    <div id="coll_container" class="container">
+        <div class="row" id="image_info">
+        </div>
+        <div class="row" >
+            View Name: <input id="view_name" value="" placeholder="View Name">
+            View Width: <input id="box_width" value="" type="number" onchange="update_view_frame()"/>
+            View Height: <input id="box_height" value="" type="number" onchange="update_view_frame()" />
+            View X Offset: <input id="box_x" value="" type="number" onchange="update_view_frame()"/>
+            View Y Offset: <input id="box_y" value="" type="number" onchange="update_view_frame()"/>
+            <button id='draw_frame_toggle_button' onclick="draw_frame_toggle()">Draw Frame</button>
+            <!-- From Frame: <input id="from_frame" type="number" /> -->
+        </div>
+    </div>
+
 
     <div class='container'>
+        <div class="row choose_menu_items">
+            <div class='choose_menu_item' style='cursor: pointer;' onclick="submit_new_view()">
+                Create View
+            </div>
+        </div>
         <div class="row choose_menu_items">
             <a href='/video'>
                 <div class='choose_menu_item'>

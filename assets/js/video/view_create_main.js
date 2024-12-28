@@ -56,7 +56,33 @@ $(document).ready(function(){
     // The following line sets up the game loop
     setInterval(update, SECONDSBETWEENFRAMES * 500);
 
+    $('#canvas').on('mousedown', onmousedown_view);
+    $('#canvas').on('mouseup', onmouseup_view);
+    $('#canvas').on('mousemove', onmousemove_view);
+
 })
+
+/* Mouse and keyboard functions */
+function onmousedown_view(evt){
+    var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
+    var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
+    view_create_mouse_down(x,y);
+}
+
+function onmouseup_view(evt) {
+    // view_create_mouse_up();
+    var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
+    var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
+    view_create_mouse_up(x,y);   
+}
+
+function onmousemove_view(evt) {
+    var x = evt.pageX - canvas.offsetLeft; // Position on the canvas X
+    var y = evt.pageY - canvas.offsetTop;// Position on the canvas Y
+    $('#debug').html("X: " + x + ", Y:" + y);
+    view_create_mouse_move(x,y);
+}
+/* End mouse and keyboard functions */
 
 function update(){
     // Clear the drawing area
@@ -66,4 +92,9 @@ function update(){
     ctx.fillRect(0,0,GAME_SIZE.x,GAME_SIZE.y);
     
     draw_frame(ctx);
+}
+
+function submit_new_view() {
+    // Gather details and send them for rendering
+    console.log("TODO: submit the new frame details for processing");
 }

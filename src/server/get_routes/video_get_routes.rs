@@ -3,12 +3,12 @@ use serde_json::json;
 
 use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
-use sqlx::SqlitePool;
+use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::{db::video_models::VideoModel, server::query_params::VideoFrameQuery, video::video_utils::get_image_count_for_video};
+use crate::{db::{video_models::VideoModel, video_queries}, server::query_params::VideoFrameQuery, video::video_utils::get_image_count_for_video};
 
 
-pub(super) async fn make_routes(_db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
+pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // Get /video_upload - the video upload page
     let video_upload_page = warp::path("video_upload").map( || {
         let body: String = fs::read_to_string("templates/video/video_upload.html").unwrap().parse().unwrap();
@@ -65,6 +65,11 @@ pub(super) async fn make_routes(_db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Bo
     let get_video_frame = warp::path!("img" / "videoframe" / String / i32)
         .and_then(get_video_frame_impl);
 
+    // GET /img/viewframe/<guid>/<frame> - pass in VIEW guid and the frame - get an image back
+    let get_view_frame = warp::path!("img" / "viewframe" / String / i32)
+        .and(db_conn.clone())
+        .and_then(get_view_frame_impl);
+
     video_upload_page
         .or(video_listing_page)
         .or(video_menu_page)
@@ -73,6 +78,7 @@ pub(super) async fn make_routes(_db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Bo
         .or(video_upload_page)
         .or(get_frame_indexes)
         .or(get_video_frame)
+        .or(get_view_frame)
         .boxed()
 }
 
@@ -156,6 +162,21 @@ async fn get_video_frame_impl(guid: String, frame: i32) -> Result<Box<dyn Reply>
     Ok(
         Box::new(
             warp::reply::with_header(bytes, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_view_frame_impl(guid: String, frame: i32, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let img_data = match video_queries::get_image_view_image_data(guid, frame, &mut db_pool.clone()).await {
+        Ok(res) => res,
+        Err(_err) => {
+            return Err(warp::reject::not_found())
+        }
+    };
+
+    Ok(
+        Box::new(
+            warp::reply::with_header(img_data, "Content-Type", "image/png")
         )
     )
 }
