@@ -36,6 +36,13 @@
     
     <div id='error' style='color:red'></div>
     
+    <div style="text-align: center;margin-top: 10px">
+        <button onclick="toggle_animation()">Toggle Animation</button>
+        <div class="slidecontainer">
+            <input type="range" min="0" max="100" value="0" class="slider" id="animation_position" onchange="update_slider_pos()">
+        </div>
+    </div>
+
     <div id="canvas-div" style="text-align: center;">
 		<canvas id="canvas"> <!-- width="800" height="400" -->
 			<p>Your browser does not support the canvas element.</p>
