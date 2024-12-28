@@ -223,3 +223,59 @@ function draw_frame_toggle() {
         $('#canvas').addClass('normal_cursor');
     }
 }
+
+function submit_new_view() {
+    $('#error').html("");
+    // Gather details and send them for rendering
+    var name = $('#view_name').val();
+    if (name === undefined || name === null || name === "") {
+        $('#error').html("Name cannot be blank");
+        return;
+    }
+    var data = {
+        guid: window.video_guid,
+        name: name,
+        frames: []
+    }
+
+    for(var i=0;i<frames.length;i++){
+        var f = frames[i];
+        var fv = frame_views[0]; // TODO: Get actual frame view, for now just one
+        var nxt = {
+            frame_id: f.frame,
+            x: fv.x,
+            y: fv.y,
+            width: fv.width,
+            height: fv.height
+        }
+        data.frames.push(nxt);
+    }
+   
+    // console.log(data);
+
+    var url = "/api/view_create";
+    $.ajax({
+        url: url,
+        type: 'POST',
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data),
+        // beforeSend: function (xhr) {
+        //     xhr.setRequestHeader ("Authorization", "Bearer " + token);
+        // },
+        success: function(ret){
+            
+            if(ret.status != 'ok'){
+                $('#error').html(ret.message);
+                return;
+            }
+            // console.log(ret);
+            window.location.href='/video';
+        },
+        error: function(ret){
+            console.log("ERROR creating new collection");
+            console.log(ret);
+        }
+    })
+
+}

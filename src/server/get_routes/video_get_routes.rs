@@ -5,7 +5,7 @@ use handlebars::Handlebars;
 use warp::{Filter, filters::BoxedFilter, Reply, Rejection};
 use sqlx::{Pool, Sqlite, SqlitePool};
 
-use crate::{db::{video_models::VideoModel, video_queries}, server::query_params::VideoFrameQuery, video::video_utils::get_image_count_for_video};
+use crate::{db::{video_models::{VideoModel, ViewList}, video_queries}, server::query_params::VideoFrameQuery, video::video_utils::get_image_count_for_video};
 
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
@@ -53,6 +53,11 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     let get_video_list = warp::path!("api" / "video")
         .and_then(get_video_list_impl);
 
+    // GET /api/view - get a list of views available
+    let get_view_list = warp::path!("api" / "view")
+        .and(db_conn.clone())
+        .and_then(get_view_list_impl);
+
     // GET /api/frame/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
     let get_frame_indexes = warp::path!("api" / "frames" / String / usize)
         .and(warp::filters::query::raw()
@@ -60,6 +65,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
                .unify()
            )
         .and_then(get_frame_indexes_impl);
+
+    let get_view_dimensions = warp::path!("api" / "view_dim" / String)
+           .and(db_conn.clone())
+           .and_then(get_view_dimensions_impl);
 
     // GET /img/frame/<guid>/<frame>
     let get_video_frame = warp::path!("img" / "videoframe" / String / i32)
@@ -79,6 +88,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_frame_indexes)
         .or(get_video_frame)
         .or(get_view_frame)
+        .or(get_view_list)
+        .or(get_view_dimensions)
         .boxed()
 }
 
@@ -150,6 +161,38 @@ async fn get_frame_indexes_impl(guid: String, max_frames: usize, query_string: S
     )
 }
 
+async fn get_view_dimensions_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    // Find view from string
+    // return dimensions of first frame
+    let view = match video_queries::get_view_from_guid(guid, &mut db_pool.clone()).await {
+        Ok(v) => v,
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string(), "width": 0, "height": 0}))
+                )
+            )
+        }
+    };
+    let frame = match video_queries::get_view_frame_with_video_id(view.id, 1, &mut db_pool.clone()).await {
+        Ok(f) => f,
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string(), "width": 0, "height": 0}))
+                )
+            )
+        }
+    };
+    let width = frame.width;
+    let height = frame.height;
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "width": width, "height": height}))
+        )
+    )
+}
+
 async fn get_video_frame_impl(guid: String, frame: i32) -> Result<Box<dyn Reply>, Rejection> {
     let filename = format!("./files/videos/processed/{}/img{:0>4}.png", guid, frame);
     let path = Path::new(&filename);
@@ -177,6 +220,33 @@ async fn get_view_frame_impl(guid: String, frame: i32, db_pool: Pool<Sqlite>) ->
     Ok(
         Box::new(
             warp::reply::with_header(img_data, "Content-Type", "image/png")
+        )
+    )
+}
+
+async fn get_view_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let video_views = match video_queries::get_view_list(&mut db_pool.clone()).await {
+        Ok(v) => v,
+        Err(err) => {
+            return  Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string(), "views": []}))
+                )
+            )
+        }
+    };
+    let mut ret = Vec::<ViewList>::new();
+
+    for vv in video_views.iter() {
+        ret.push(ViewList{
+            name: vv.name.clone(),
+            guid: vv.guid.clone()
+        });
+    }
+
+    Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "views": ret}))
         )
     )
 }

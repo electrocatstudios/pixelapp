@@ -52,7 +52,7 @@ pub async fn get_view_details(guid: String, pool: &mut Pool<Sqlite>) -> Result<V
         Err(err) => return Err(err)
     };
 
-    ret.guid = view.view_guid;
+    ret.guid = view.guid;
     ret.name = view.name;
 
     // Get the frames and push them into return result
@@ -105,24 +105,54 @@ pub async fn create_new_frame(video_view_id: i32, frame: &ViewCreateDescFrame, i
     }
 }
 
-pub async fn get_image_view_image_data(guid: String, frame: i32,pool: &mut Pool<Sqlite>) -> Result<Vec::<u8>, DBError> {
-    let vv = match sqlx::query_as::<_,VideoView>(
-        "SELECT * FROM video_view WHERE guid=$1"
-    )
-        .bind(guid)
-        .fetch_one(&*pool).await {
-            Ok(vv) => vv,
-            Err(err) => return Err(DBError::DatabaseError(err.to_string()))
-        };
-    
-    let res =  match sqlx::query_as::<_,VideoViewFrame>(
+pub async fn get_view_frame_with_video_id(id: i32, frame: i32, pool: &mut Pool<Sqlite>) -> Result<VideoViewFrame, DBError> {
+    match sqlx::query_as::<_,VideoViewFrame>(
         "SELECT * FROM video_view_frame WHERE video_view_id=$1 AND frame=$2"
     )
-    .bind(vv.id)
+    .bind(id)
     .bind(frame)
     .fetch_one(&*pool).await {
+        Ok(vv) => Ok(vv),
+        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
+pub async fn get_image_view_image_data(guid: String, frame: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<u8>, DBError> {
+    let vv = match get_view_from_guid(guid.clone(), &mut pool.clone()).await {
         Ok(vv) => vv,
-        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    };
+    
+    let res = match get_view_frame_with_video_id(vv.id, frame, &mut pool.clone()).await {
+        Ok(vf) => vf,
+        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
     };
     Ok(res.img)
+}
+
+pub async fn delete_view_with_guid(guid: String, pool: &mut Pool<Sqlite>) -> Result<(), DBError> {
+    let vv = match get_view_from_guid(guid.clone(), &mut pool.clone()).await {
+        Ok(vv) => vv,
+        Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+    };
+
+    match sqlx::query(
+        "DELETE FROM video_view_frame WHERE video_view_id=$1"
+    )
+    .bind(vv.id)
+    .execute(&*pool).await {
+        Ok(_) => {},
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+
+    match sqlx::query(
+        "DELETE FROM video_view WHERE id=$1"
+    )
+    .bind(vv.id)
+    .execute(&*pool).await {
+        Ok(_) => {},
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+
+    Ok(())
 }

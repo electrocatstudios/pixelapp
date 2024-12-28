@@ -93,8 +93,3 @@ function update(){
     
     draw_frame(ctx);
 }
-
-function submit_new_view() {
-    // Gather details and send them for rendering
-    console.log("TODO: submit the new frame details for processing");
-}

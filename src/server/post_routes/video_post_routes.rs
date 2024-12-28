@@ -26,6 +26,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and_then(view_create_impl);
 
     video_upload
+        .or(view_create)
         .boxed()
 }
 

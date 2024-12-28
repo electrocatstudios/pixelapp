@@ -55,7 +55,7 @@ impl VideoModel {
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct VideoView {
     pub id: i32,
-    pub view_guid: String,
+    pub guid: String,
     pub video_guid: String,
     pub name: String
 }
@@ -131,4 +131,10 @@ pub struct ViewCreateDescFrame{
     pub y: i32,
     pub width: i32,
     pub height: i32
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ViewList {
+    pub name: String,
+    pub guid: String
 }
