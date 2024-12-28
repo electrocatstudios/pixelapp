@@ -58,6 +58,11 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_view_list_impl);
 
+    // GET /api/view/<guid> - get list of frames attached to view
+    let get_view_details = warp::path!("api" / "view" / String)
+        .and(db_conn.clone())
+        .and_then(get_view_details_impl);
+
     // GET /api/frame/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
     let get_frame_indexes = warp::path!("api" / "frames" / String / usize)
         .and(warp::filters::query::raw()
@@ -89,6 +94,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .or(get_video_frame)
         .or(get_view_frame)
         .or(get_view_list)
+        .or(get_view_details)
         .or(get_view_dimensions)
         .boxed()
 }
@@ -115,6 +121,30 @@ async fn get_video_list_impl() -> Result<Box<dyn Reply>, Rejection> {
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": "", "videos": ret}))
+        )
+    )
+}
+
+async fn get_view_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let view = match video_queries::get_view_details(guid.clone(), &mut db_pool.clone()).await {
+        Ok(view) => view,
+        Err(err) => {
+            return Ok(
+                Box::new(
+                    warp::reply::json(&json!({"status": "fail", "message": err.to_string(), "frames": []}))
+                )
+            )
+        }
+    };
+
+    let mut frames = Vec::<i32>::new();
+    for f in view.frames.iter() {
+        frames.push(f.frame_id);
+    }
+    
+    return Ok(
+        Box::new(
+            warp::reply::json(&json!({"status": "ok", "message": "", "frames": frames}))
         )
     )
 }

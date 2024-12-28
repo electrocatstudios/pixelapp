@@ -34,6 +34,18 @@ pub async fn get_view_from_guid(guid: String, pool: &mut Pool<Sqlite>) -> Result
     }
 }
 
+pub async fn get_view_from_id(id: i32, pool: &mut Pool<Sqlite>) -> Result<VideoView, DBError> {
+    // Do the actual request to get the list
+    match sqlx::query_as::<_,VideoView>(
+        "SELECT * FROM video_view WHERE id=$1"
+    )
+    .bind(id)
+    .fetch_one(&*pool).await {
+        Ok(vv) => Ok(vv),
+        Err(err) => return Err(DBError::UnknownError(err.to_string()))
+    }
+}
+
 pub async fn get_view_frames_from_view_id(id: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<VideoViewFrame>, DBError> {
     match sqlx::query_as::<_,VideoViewFrame>(
         "SELECT * FROM video_view_frame WHERE video_view_id=$1"

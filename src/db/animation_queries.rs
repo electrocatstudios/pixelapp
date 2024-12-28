@@ -7,7 +7,7 @@ use serde_json::json;
 use std::fs;
 
 use super::animation_models::{Animation, AnimationDesc, AnimationDetails, AnimationLimb, AnimationLimbDetails, AnimationLimbMove, AnimationSaveLimbDesc, AnimationUpdateDesc };
-use super::video_queries::get_view_from_guid;
+use super::video_queries::{self, get_view_from_guid};
 use super::DBError;
 
 
@@ -119,13 +119,24 @@ pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>
     };
 
     let menubar: String = fs::read_to_string("templates/snippets/animation_menubar.html").unwrap().parse().unwrap();
+    let view_guid = match anim.view_id {
+        Some(id) => {
+            match video_queries::get_view_from_id(id, &mut pool.clone()).await {
+                Ok(v) => v.guid,
+                Err(err) => return Err(DBError::UnknownError(err.to_string()))
+            }
+        },
+        None => "".to_string()
+    };
+
     let ret = &json!({
         "name": anim.name.clone(),
         "width": anim.width,
         "height": anim.height,
         "length": anim.length,
         "guid": guid,
-        "menubar": &menubar
+        "menubar": &menubar,
+        "view_guid": view_guid.clone()
     });
 
     Ok(ret.clone())
