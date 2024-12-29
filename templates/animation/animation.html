@@ -39,7 +39,10 @@
     <div style="text-align: center;margin-top: 10px">
         <button onclick="toggle_animation()">Toggle Animation</button>
         <div class="slidecontainer">
-            <input type="range" min="0" max="100" value="0" class="slider" id="animation_position" onchange="update_slider_pos()">
+            <input type="range" min="0" max="100" value="0" class="slider" 
+                    id="animation_position" onchange="update_slider_pos()"
+                    style="width: {{width}}px;" /><br/>
+            <div id="cur_frame"></div>
         </div>
     </div>
 

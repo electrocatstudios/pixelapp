@@ -52,7 +52,10 @@ function GuideViewManagerUpdate(perc) {
 }
 
 function GuideViewManagerDraw(ctx) {
-    var cur_frame = this.frames[this.cur_sel_frame];
+    if(this.cur_sel_frame === undefined || this.cur_sel_frame === null || this.cur_sel_frame >= this.frames.length) {
+        return;
+    }
+    var cur_frame = this.frames[this.cur_sel_frame].image;
     if(cur_frame === undefined || cur_frame.width === undefined){
         return; // Not ready yet.
     }
@@ -67,7 +70,10 @@ function GuideViewManagerDraw(ctx) {
 }
 
 function GuideViewManagerAddFrame(frame){
-    this.frames.push(new Image());
-    //"img" / "viewframe" / String / i32
-    this.frames[this.frames.length-1].src = "/img/viewframe/" + window.view_guid + "/" + frame;
+    var nxt = {
+        image: new Image(),
+        frame: frame
+    }
+    this.frames.push(nxt);
+    this.frames[this.frames.length-1].image.src = "/img/viewframe/" + window.view_guid + "/" + frame;
 }

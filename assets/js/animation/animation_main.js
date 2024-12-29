@@ -88,12 +88,23 @@ function update(){
         currentTime += SECONDSBETWEENFRAMES;
         if (currentTime >= (animationLength / 1000)) {
             currentTime -= (animationLength / 1000);
-        }
-        $('#animation_position').val(Math.floor((currentTime / (animationLength / 1000)) * 100));
+        }    
     }
 
-    GUIDEVIEW_MANAGER.update(currentTime / (animationLength / 1000));
-    SKELETON_MANAGER.update(currentTime / (animationLength / 1000));
+    // Update interface to show current frame details
+    var perc = currentTime / (animationLength / 1000); // Perc range 0-1
+    var frame_num = Math.floor(perc * 100);
+    $('#animation_position').val(frame_num);
+    var frame_idx = Math.floor((GUIDEVIEW_MANAGER.frames.length) * perc);
+    var percentage = Math.floor((perc * 100));
+    if( frame_idx !== undefined && !(frame_idx>=GUIDEVIEW_MANAGER.frames.length) ) {
+        var frame_message = "Frame: " + GUIDEVIEW_MANAGER.frames[frame_idx].frame + ", Percentage: " + percentage + "%";
+        $('#cur_frame').html(frame_message);    
+    }
+    // End interface current frame details
+
+    GUIDEVIEW_MANAGER.update(perc);
+    SKELETON_MANAGER.update(perc);
 
     // Clear the drawing area
     ctx.clearRect(0, 0, canvas.width, canvas.height);
