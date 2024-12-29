@@ -1,16 +1,9 @@
 use serde_json::json;
-use futures::{StreamExt, TryStreamExt};
-// use std::convert::Infallible;
-use std::fs;
-
-use bytes::BufMut;
-use uuid::Uuid;
-use warp::{filters::{multipart::FormData, BoxedFilter}, Filter, Rejection, Reply};
+use warp::{filters::BoxedFilter, Filter, Rejection, Reply};
 use sqlx::{SqlitePool, Pool, Sqlite};
 
-use crate::{db::{animation_models::{AnimationDesc, AnimationSaveDesc, AnimationUpdateDesc}, animation_queries}, video::VideoUploadDetails};
-use crate::video::proc::process_pending_videos_into_frames;
-use std::thread;
+use crate::db::{animation_models::{AnimationDesc, AnimationSaveDesc, AnimationUpdateDesc}, animation_queries};
+
 
 pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> BoxedFilter<(impl Reply,)> {
     // POST /api/animation_new - create new animation

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, io::{BufReader, Read}, path::Path};
+use std::collections::HashMap;
 
 use image::{Rgba, RgbaImage};
 use imageproc::drawing::draw_line_segment_mut;
