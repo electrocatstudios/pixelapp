@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::File, io::{BufReader, Read}, path::Path};
 
 use image::{Rgba, RgbaImage};
 use imageproc::drawing::draw_line_segment_mut;
@@ -107,4 +107,29 @@ pub fn render_animation_png(animation_details: AnimationDetails, perc: f64) -> R
 
     Ok(Box::new(bytes))
 }
- 
+
+pub fn crop_video_frame(vid_guid: String, frame_id: i32, offset_x: i32, offset_y: i32, width: i32, height: i32) -> Result<Box<Vec<u8>>, ImageRenderError> {
+    // TODO: Proper checks to make sure no out of bounds and proper error formatting
+    let filename = format!("./files/videos/processed/{}/img{:0>4}.png", vid_guid, frame_id);
+
+    let im = image::open(&filename).unwrap().to_rgba8();
+
+    let background_color = Rgba([0, 0, 0, 255]);
+    
+    let mut ret: image::ImageBuffer<Rgba<u8>, Vec<u8>> = RgbaImage::from_pixel(width as u32, height as u32, background_color);
+    
+    for x in 0..width as u32 {
+        for y in 0..height as u32 {
+            let pix = im.get_pixel(offset_x as u32  + x, offset_y as u32 + y);
+            ret.put_pixel(x, y, *pix);
+        }
+    }
+
+    let mut bytes: Vec<u8> = Vec::new();
+    ret.write_to(
+        &mut std::io::Cursor::new(&mut bytes),
+        image::ImageOutputFormat::Png
+    ).unwrap();
+
+    Ok(Box::new(bytes))
+}

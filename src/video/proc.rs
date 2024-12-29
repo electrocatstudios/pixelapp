@@ -40,7 +40,7 @@ pub fn process_pending_videos_into_frames() {
                     Some(f) => {
                         let ext = f.to_str().unwrap().to_string();
                         if ext != "mp4".to_string() {
-                            println!("Found a file that was not mp4: {}", file_n.clone());
+                            // println!("Found a file that was not mp4: {}", file_n.clone());
                             return;
                         }
                     },

@@ -332,7 +332,6 @@ function SkeletonManagerRemoveLimbMove(idx) {
 
 function SkeletonManagerLoadData(anim_id) {
     var url = "/api/animation/" + anim_id;
-    // console.log("loading...");
     $.ajax({
         url: url,
         type: 'GET',
@@ -343,9 +342,7 @@ function SkeletonManagerLoadData(anim_id) {
                 $('#error').html(ret.message);
                 return;
             }
-            console.log(ret);
-            // TODO: Remove this
-            
+
             SKELETON_MANAGER.limb_list = []
             for(var i=0;i<ret.animation.animation_limbs.length;i++){
                 let limb = ret.animation.animation_limbs[i];

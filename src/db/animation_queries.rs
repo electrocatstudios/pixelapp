@@ -7,6 +7,7 @@ use serde_json::json;
 use std::fs;
 
 use super::animation_models::{Animation, AnimationDesc, AnimationDetails, AnimationLimb, AnimationLimbDetails, AnimationLimbMove, AnimationSaveLimbDesc, AnimationUpdateDesc };
+use super::video_queries::{self, get_view_from_guid};
 use super::DBError;
 
 
@@ -22,11 +23,20 @@ pub async fn get_animation_list(pool: &mut Pool<Sqlite>) -> Result<vec::Vec::<An
 
 pub async fn create_new_animation(data: AnimationDesc, pool: &mut Pool<Sqlite>) -> Result<String, DBError> {
     let guid: String = format!("{:?}", Uuid::new_v4());
+    let view_id: Option<i32> = match data.view_guid {
+        Some(view_guid) => {
+            match get_view_from_guid(view_guid, &mut pool.clone()).await {
+                Ok(view) => Some(view.id),
+                Err(err) => return Err(DBError::DatabaseError(err.to_string()))
+            }
+        },
+        None => None
+    };
 
     match sqlx::query(
         "INSERT INTO animation(name, description, \
-        width, height, length, guid) VALUES \
-        ($1, $2, $3, $4, $5, $6)"
+        width, height, length, guid, view_id) VALUES \
+        ($1, $2, $3, $4, $5, $6, $7)"
         )
         .bind(&data.name)
         .bind(&data.description)
@@ -34,6 +44,7 @@ pub async fn create_new_animation(data: AnimationDesc, pool: &mut Pool<Sqlite>) 
         .bind(&data.height)
         .bind(&data.length)
         .bind(&guid.clone())
+        .bind(view_id)
         .execute(&*pool).await {
             Ok(_) => Ok(guid),
             Err(err) => Err(DBError::DatabaseError(err.to_string()))
@@ -108,13 +119,24 @@ pub async fn get_animation_details_as_json(guid: String, pool: &mut Pool<Sqlite>
     };
 
     let menubar: String = fs::read_to_string("templates/snippets/animation_menubar.html").unwrap().parse().unwrap();
+    let view_guid = match anim.view_id {
+        Some(id) => {
+            match video_queries::get_view_from_id(id, &mut pool.clone()).await {
+                Ok(v) => v.guid,
+                Err(err) => return Err(DBError::UnknownError(err.to_string()))
+            }
+        },
+        None => "".to_string()
+    };
+
     let ret = &json!({
         "name": anim.name.clone(),
         "width": anim.width,
         "height": anim.height,
         "length": anim.length,
         "guid": guid,
-        "menubar": &menubar
+        "menubar": &menubar,
+        "view_guid": view_guid.clone()
     });
 
     Ok(ret.clone())

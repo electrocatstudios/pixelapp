@@ -12,6 +12,7 @@ var GAME_SIZE_MIN = {x: 300, y: 500}
 var OUT_SIZE = {};
 
 var SKELETON_MANAGER = null;
+var GUIDEVIEW_MANAGER = null;
 
 function performResize(){
     GAME_SIZE = {
@@ -51,8 +52,7 @@ function performResize(){
 
     SKELETON_MANAGER.add_animation_limb(100, 100, 0.0, 50, "#ffff00", "first_test_limb", null);
     
-    SKELETON_MANAGER.limb_list[0].add_position(100, 100, 1.0, 50, 0.5);
-    SKELETON_MANAGER.limb_list[0].add_position(100, 100, 0.0, 50, 1.0);
+    GUIDEVIEW_MANAGER = new GuideViewManager();
 }
 
 
@@ -84,11 +84,30 @@ function update(){
         return;
     }
 
-    // Store the time - for debugging purposes mostly
-    currentTime += SECONDSBETWEENFRAMES;
-    if (currentTime >= (animationLength / 1000)) {
-        currentTime -= (animationLength / 1000);
+    if(playing_animation){
+        currentTime += SECONDSBETWEENFRAMES;
+        if (currentTime >= (animationLength / 1000)) {
+            currentTime -= (animationLength / 1000);
+        }    
     }
+
+    // Update interface to show current frame details
+    var perc = currentTime / (animationLength / 1000); // Perc range 0-1
+    var frame_num = Math.floor(perc * 100);
+    $('#animation_position').val(frame_num);
+    var frame_idx = Math.floor((GUIDEVIEW_MANAGER.frames.length - 1) * perc);
+    var percentage = Math.floor((perc * 100));
+    if( frame_idx !== undefined && !(frame_idx>=GUIDEVIEW_MANAGER.frames.length) ) {
+        var frame_message = "Frame: " + GUIDEVIEW_MANAGER.frames[frame_idx].frame + ", Percentage: " + percentage + "%";
+        // Debug
+        frame_message += " [Index " + (frame_idx + 1) + "/" + GUIDEVIEW_MANAGER.frames.length + "]"
+        // 
+        $('#cur_frame').html(frame_message);    
+    }
+    // End interface current frame details
+
+    GUIDEVIEW_MANAGER.update(perc);
+    SKELETON_MANAGER.update(perc);
 
     // Clear the drawing area
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -96,12 +115,10 @@ function update(){
 
     ctx.fillRect(0,0,GAME_SIZE.x,GAME_SIZE.y);
 
-    // Update then draw the limbs
-    SKELETON_MANAGER.update(currentTime / (animationLength / 1000));
+    GUIDEVIEW_MANAGER.draw(ctx);
     SKELETON_MANAGER.draw(ctx);
+
 }
-
-
 
 function save_animation(){
     var limbs = SKELETON_MANAGER.getAnimationData();
@@ -133,4 +150,19 @@ function save_animation(){
             console.log(ret);
         }
     })
+}
+
+var playing_animation = true;
+function toggle_animation(){
+    playing_animation = !playing_animation;
+    if(playing_animation){
+        currentTime = 0; // Reset the animation on toggle
+    } else {
+        $('#animation_position').val(Math.floor((currentTime / (animationLength / 1000)) * 100));
+    }
+}
+
+function update_slider_pos() {
+    var perc = $('#animation_position').val() / 100;
+    currentTime = (animationLength / 1000) * perc;
 }

@@ -11,9 +11,10 @@
     <link href="/css/animation.css?t=12" rel="stylesheet">
     <link href='/css/skeleton.css' rel='stylesheet'>
 
-    <script type='text/javascript' src='/js/animation_main.js?t=123'></script>
-    <script type='text/javascript' src='/js/skeletonmanager.js?t=12'></script>
-    <script type='text/javascript' src='/js/animation_limb.js?t=12'></script>
+    <script type='text/javascript' src='/js/animation/animation_main.js?t=123'></script>
+    <script type='text/javascript' src='/js/animation/skeletonmanager.js?t=12'></script>
+    <script type='text/javascript' src='/js/animation/guideviewmanager.js?t=12'></script>
+    <script type='text/javascript' src='/js/animation/animation_limb.js?t=12'></script>
 
     <script type='text/javascript' src='/js/keyHandlerUtils.js?t=127'></script>
     <script type='text/javascript' src='/js/utils.js'></script>
@@ -25,6 +26,7 @@
         window.picture_height = {{height}};
         window.animation_id = "{{guid}}";
         window.animation_name = "{{name}}";
+        window.view_guid = "{{view_guid}}";
     </script>
 </head>
 
@@ -34,6 +36,16 @@
     
     <div id='error' style='color:red'></div>
     
+    <div style="text-align: center;margin-top: 10px">
+        <button onclick="toggle_animation()">Toggle Animation</button>
+        <div class="slidecontainer">
+            <input type="range" min="0" max="100" value="0" class="slider" 
+                    id="animation_position" onchange="update_slider_pos()"
+                    style="width: {{width}}px;" /><br/>
+            <div id="cur_frame"></div>
+        </div>
+    </div>
+
     <div id="canvas-div" style="text-align: center;">
 		<canvas id="canvas"> <!-- width="800" height="400" -->
 			<p>Your browser does not support the canvas element.</p>

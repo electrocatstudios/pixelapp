@@ -114,9 +114,52 @@ impl GifRenderQuery {
     }
 }
 
+
+pub struct VideoFrameQuery {
+    pub start: usize,
+    pub end: usize,
+    pub diff: usize
+}
+impl VideoFrameQuery {
+    pub fn from_query(max_frame: usize, query: String) -> Self {
+        let pairs = query.split("&");
+        
+        let mut start = 1;
+        let mut end = max_frame;
+        for pair in pairs {
+            let p_split: Vec::<&str> = pair.split("=").collect();
+            if p_split[0].to_lowercase() == "start" {
+                start = p_split[1].parse::<usize>().unwrap();
+            }
+            if p_split[0].to_lowercase() == "end" {
+                end = p_split[1].parse::<usize>().unwrap();
+            }
+        }
+        if start > end {
+            end = start;
+        }
+        if start > max_frame {
+            start = max_frame;
+            end = max_frame;
+        }
+        VideoFrameQuery {
+            start: start,
+            end: end,
+            diff: end-start
+        }
+    }
+
+    pub fn _default() -> Self {
+        VideoFrameQuery {
+            start: 0,
+            end: 0,
+            diff: 0
+        }
+    }
+}
 #[cfg(test)]
 mod search_query_tests {
-    use super::RenderQuery;
+    use super::{RenderQuery, VideoFrameQuery};
 
     #[test]
     fn test_get_hashmap_color_subs() {
@@ -146,4 +189,27 @@ mod search_query_tests {
     }
 
     // TODO: Add in GifRenderQuery tests
+
+    #[test]
+    fn test_get_video_frame_query() {
+        let vq = VideoFrameQuery::from_query(123, "".to_string());
+        assert_eq!(vq.start, 1);
+        assert_eq!(vq.end, 123);
+
+        let vq = VideoFrameQuery::from_query(234, "start=4&end=56".to_string());
+        assert_eq!(vq.start, 4);
+        assert_eq!(vq.end, 56);
+
+        let vq = VideoFrameQuery::from_query(234, "start=400&end=232".to_string());
+        assert_eq!(vq.start, 234); // If end is in the past it uses start - but then start is ahead of max
+        assert_eq!(vq.end, 234);    // therefore both are just the max_frame
+
+        let vq = VideoFrameQuery::from_query(496, "start=421".to_string());
+        assert_eq!(vq.start, 421);
+        assert_eq!(vq.end, 496);
+
+        let vq = VideoFrameQuery::from_query(496, "end=421".to_string());
+        assert_eq!(vq.start, 1);
+        assert_eq!(vq.end, 421);
+    }
 }
