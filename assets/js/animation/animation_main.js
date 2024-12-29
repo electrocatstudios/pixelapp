@@ -95,10 +95,13 @@ function update(){
     var perc = currentTime / (animationLength / 1000); // Perc range 0-1
     var frame_num = Math.floor(perc * 100);
     $('#animation_position').val(frame_num);
-    var frame_idx = Math.floor((GUIDEVIEW_MANAGER.frames.length) * perc);
+    var frame_idx = Math.floor((GUIDEVIEW_MANAGER.frames.length - 1) * perc);
     var percentage = Math.floor((perc * 100));
     if( frame_idx !== undefined && !(frame_idx>=GUIDEVIEW_MANAGER.frames.length) ) {
         var frame_message = "Frame: " + GUIDEVIEW_MANAGER.frames[frame_idx].frame + ", Percentage: " + percentage + "%";
+        // Debug
+        frame_message += " [Index " + (frame_idx + 1) + "/" + GUIDEVIEW_MANAGER.frames.length + "]"
+        // 
         $('#cur_frame').html(frame_message);    
     }
     // End interface current frame details

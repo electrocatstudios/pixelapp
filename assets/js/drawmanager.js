@@ -90,25 +90,27 @@ function DrawManagerDraw(){
         ctx.fillStyle = DRAW_MANAGER.background_color;
         ctx.fillRect(0,0,w,h);
     }
-     
-    // Draw animation guide - TODO: Should respect zoom
-    if(window.animation_guid !== "" 
-        && this.view_list.animation 
-        && this.animation_guide.length ==  PIXEL_MANAGER.saved_image_data.length ) {
-        ctx.drawImage(
-            this.animation_guide[this.cur_frame],
-            this.position.x,
-            this.position.y,
-            this.animation_guide[this.cur_frame].width,
-            this.animation_guide[this.cur_frame].height
-            );
-    }
 
     //vertical bars
     let dims = PIXEL_MANAGER.getDimensions();
     if(dims == undefined){
         console.log("Error: undefined dimensions");
         return;
+    }
+
+    // Draw animation guide - TODO: Should respect zoom
+    if(window.animation_guid !== "" 
+        && this.view_list.animation 
+        && this.animation_guide.length ==  PIXEL_MANAGER.saved_image_data.length ) {
+        var output_width = this.animation_guide[this.cur_frame].width * TOOL_MANAGER.scale;
+        var output_height = this.animation_guide[this.cur_frame].height * TOOL_MANAGER.scale;
+        ctx.drawImage(
+            this.animation_guide[this.cur_frame],
+            this.position.x + dims.offset_x,
+            this.position.y + dims.offset_y,
+            output_width,
+            output_height,
+            );
     }
 
     // Draw the grid

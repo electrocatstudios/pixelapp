@@ -48,11 +48,11 @@ function GuideViewManagerRefresh() {
 
 function GuideViewManagerUpdate(perc) {
     // Do updates - calculate current frame showing
-    this.cur_sel_frame = Math.floor(this.frames.length * perc)
+    this.cur_sel_frame = Math.floor((this.frames.length - 1)* perc)
 }
 
 function GuideViewManagerDraw(ctx) {
-    if(this.cur_sel_frame === undefined || this.cur_sel_frame === null || this.cur_sel_frame >= this.frames.length) {
+    if(this.cur_sel_frame === undefined || this.cur_sel_frame === null || this.cur_sel_frame > this.frames.length) {
         return;
     }
     var cur_frame = this.frames[this.cur_sel_frame].image;
@@ -60,12 +60,36 @@ function GuideViewManagerDraw(ctx) {
         return; // Not ready yet.
     }
     // TODO: Stretch or compress image as required
+    var width_diff = window.picture_width / cur_frame.width;
+    if(width_diff > 1){
+        width_diff = 1;
+    }
+    var height_diff = window.picture_height / cur_frame.height;
+    if(height_diff > 1){
+        height_diff = 1;
+    }
+    var scale = 1;
+    if (height_diff>width_diff) {
+        // Width is more compressed
+        scale = width_diff;
+    } else {
+        scale = height_diff;
+    }
+    var output_width = cur_frame.width * scale;
+    var output_height = cur_frame.height * scale;
+    
+    var offset_x = (GAME_SIZE.x / 2) - (output_width / 2);
+    var offset_y = (GAME_SIZE.y / 2) - (output_height / 2);
     ctx.drawImage(
         cur_frame,
         0,
         0,
         cur_frame.width,
-        cur_frame.height
+        cur_frame.height,
+        offset_x,
+        offset_y,
+        output_width,
+        output_height
     );
 }
 
