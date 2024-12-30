@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/js/jquery.min.js"></script>
+
+    <link rel='stylesheet' href='/css/pixelapp.css?t=114'>
+
+    <title>Create View</title>
+
+    <script type="text/javascript" src="/js/video/view_preview.js?t=123"></script>
+    <script type="text/javascript" src="/js/video/preview_view_manager.js?t=123"></script>
+    <script type='text/javascript' src='/js/utils.js'></script>
+
+    <link href='/css/website.css' rel='stylesheet'>
+    <link href='/css/skeleton.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <script>
+        window.picture_width = {{width}};
+        window.picture_height = {{height}};
+        window.view_guid = "{{guid}}";
+    </script>
+    <style>
+        .draw_cursor {
+            cursor: crosshair;
+        }
+        .normal_cursor {
+            cursor: auto;
+        }
+    </style>
+</head>
+
+<body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>   
+    <br>
+
+    <div class='container'>
+        <div class='row'>
+            <div id='message_banner' style='text-align:center'>
+                <h1>Pixel App: Preview View</h1>
+            </div>
+        </div>
+    </div>
+
+    <br><br>
+    
+    <div id="coll_container" class="container">
+        <div class="row">
+            Number of Frames: <input id="frame_count" value="10" type="number" />
+        </div>
+        <div id='frame_hover_display' class="row">Frame: None</div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+        <div id="debug"></div>
+        </div>
+    </div>
+    <canvas id="canvas" width="{{width}}" height="{{height}}" > <!-- width="800" height="400" -->
+        <p>Your browser does not support the canvas element.</p>
+    </canvas>
+   
+
+    <div class='container'>
+        <div class="row" style="color: red" id="error"></div>
+        <div class="row choose_menu_items">
+            <a href='/video'>
+                <div class='choose_menu_item'>
+                    Back
+                </div>
+            </a>
+        </div>
+    </div>
+  
+</body>
+</html>

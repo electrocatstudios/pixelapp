@@ -49,6 +49,20 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         )
     });
 
+    // GET /view_preview/<guid> - Get a preview of the view - the host page
+    let view_preview_page = warp::path!("view_preview" / String)
+        .and(db_conn.clone())
+        .and_then(get_view_preview_page_impl);
+
+    let view_listing_page = warp::path("view_listing").map( || {
+        let body: String = fs::read_to_string("templates/video/view_listing.html").unwrap().parse().unwrap();
+        let mut handlebars = Handlebars::new();
+        handlebars.register_template_string("tpl_2", body).unwrap();
+        warp::reply::html(
+            handlebars.render("tpl_2", &json!({})).unwrap()
+        )
+    });
+
     // GET /api/video - get a list of the videos available
     let get_video_list = warp::path!("api" / "video")
         .and_then(get_video_list_impl);
@@ -71,6 +85,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
            )
         .and_then(get_frame_indexes_impl);
 
+    // GET /api/view_dim - get the dimensions of the frames
     let get_view_dimensions = warp::path!("api" / "view_dim" / String)
            .and(db_conn.clone())
            .and_then(get_view_dimensions_impl);
@@ -86,8 +101,10 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 
     video_upload_page
         .or(video_listing_page)
+        .or(view_listing_page)
         .or(video_menu_page)
         .or(video_view_create_page)
+        .or(view_preview_page)
         .or(get_video_list)
         .or(video_upload_page)
         .or(get_frame_indexes)
@@ -207,7 +224,7 @@ async fn get_view_dimensions_impl(guid: String, db_pool: Pool<Sqlite>) -> Result
             )
         }
     };
-    let frame = match video_queries::get_view_frame_with_video_id(view.id, 1, &mut db_pool.clone()).await {
+    let frame = match video_queries::get_view_frame_with_video_id(view.id, -1, &mut db_pool.clone()).await {
         Ok(f) => f,
         Err(err) => {
             return Ok(
@@ -280,6 +297,26 @@ async fn get_view_list_impl(db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rej
     Ok(
         Box::new(
             warp::reply::json(&json!({"status": "ok", "message": "", "views": ret}))
+        )
+    )
+}
+
+async fn get_view_preview_page_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    let body: String = fs::read_to_string("templates/video/view_preview.html").unwrap().parse().unwrap();
+    let (width,height) = match video_queries::get_dimensions_of_view(guid.clone(), &mut db_pool.clone()).await {
+        Ok((w,h)) => (w,h),
+        Err(err) => {
+            log::error!("Error occurred getting page {}", err.to_string());
+            (100, 100)
+        } 
+    };
+    let mut handlebars = Handlebars::new();
+    handlebars.register_template_string("tpl_3", body).unwrap();
+    Ok(
+        Box::new(
+            warp::reply::html(
+                handlebars.render("tpl_3", &json!({"guid":guid, "width": width, "height": height})).unwrap()
+            )
         )
     )
 }

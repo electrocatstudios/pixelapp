@@ -115,15 +115,28 @@ pub async fn create_new_frame(video_view_id: i32, frame: &ViewCreateDescFrame, i
 }
 
 pub async fn get_view_frame_with_video_id(id: i32, frame: i32, pool: &mut Pool<Sqlite>) -> Result<VideoViewFrame, DBError> {
-    match sqlx::query_as::<_,VideoViewFrame>(
-        "SELECT * FROM video_view_frame WHERE video_view_id=$1 AND frame=$2"
-    )
-    .bind(id)
-    .bind(frame)
-    .fetch_one(&*pool).await {
-        Ok(vv) => Ok(vv),
-        Err(err) => Err(DBError::UnknownError(err.to_string()))
+    // If frame is -1 then any frame will do
+    if frame == -1 {
+        match sqlx::query_as::<_,VideoViewFrame>(
+            "SELECT * FROM video_view_frame WHERE video_view_id=$1"
+        )
+        .bind(id)
+        .fetch_one(&*pool).await {
+            Ok(vv) => Ok(vv),
+            Err(err) => Err(DBError::UnknownError(err.to_string()))
+        }
+    } else {
+        match sqlx::query_as::<_,VideoViewFrame>(
+            "SELECT * FROM video_view_frame WHERE video_view_id=$1 AND frame=$2"
+        )
+        .bind(id)
+        .bind(frame)
+        .fetch_one(&*pool).await {
+            Ok(vv) => Ok(vv),
+            Err(err) => Err(DBError::UnknownError(err.to_string()))
+        }
     }
+    
 }
 
 pub async fn get_image_view_image_data(guid: String, frame: i32, pool: &mut Pool<Sqlite>) -> Result<Vec::<u8>, DBError> {
@@ -165,3 +178,24 @@ pub async fn delete_view_with_guid(guid: String, pool: &mut Pool<Sqlite>) -> Res
 
     Ok(())
 }
+
+pub async fn get_dimensions_of_view(guid: String, pool: &mut Pool<Sqlite>) -> Result<(i32, i32), DBError> {
+    let vv = match get_view_from_guid(guid.clone(), &mut pool.clone()).await {
+        Ok(vv) => vv,
+        Err(err) => {
+            log::error!("Error at point 1");
+            return Err(DBError::DatabaseError(err.to_string()))
+        }
+    };
+
+    let frame = match get_view_frame_with_video_id(vv.id, -1, &mut pool.clone()).await {
+        Ok(f) => f,
+        Err(err) => {
+        
+            log::error!("Error at point 1");
+            return Err(DBError::DatabaseError(err.to_string()))
+        }
+    };
+
+    Ok((frame.width, frame.height))
+} 
