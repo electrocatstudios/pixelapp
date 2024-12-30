@@ -52,7 +52,11 @@ function GuideViewManagerUpdate(perc) {
 }
 
 function GuideViewManagerDraw(ctx) {
-    if(this.cur_sel_frame === undefined || this.cur_sel_frame === null || this.cur_sel_frame > this.frames.length) {
+    if(this.cur_sel_frame === undefined 
+        || this.cur_sel_frame === null 
+        || this.cur_sel_frame > this.frames.length 
+        || this.frames[this.cur_sel_frame] === undefined) 
+    {
         return;
     }
     var cur_frame = this.frames[this.cur_sel_frame].image;

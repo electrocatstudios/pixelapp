@@ -69,6 +69,8 @@ $(document).ready(function(){
     ctx = canvas.getContext('2d');
 
     performResize();
+
+    $('#canvas').on('mousemove', onmousemove_anim);
     
     // The following line sets up the game loop
     setInterval(update, SECONDSBETWEENFRAMES * 500);
@@ -97,7 +99,7 @@ function update(){
     $('#animation_position').val(frame_num);
     var frame_idx = Math.floor((GUIDEVIEW_MANAGER.frames.length - 1) * perc);
     var percentage = Math.floor((perc * 100));
-    if( frame_idx !== undefined && !(frame_idx>=GUIDEVIEW_MANAGER.frames.length) ) {
+    if( frame_idx !== undefined && !(frame_idx>=GUIDEVIEW_MANAGER.frames.length) && GUIDEVIEW_MANAGER.frames[frame_idx] !== undefined ) {
         var frame_message = "Frame: " + GUIDEVIEW_MANAGER.frames[frame_idx].frame + ", Percentage: " + percentage + "%";
         // Debug
         frame_message += " [Index " + (frame_idx + 1) + "/" + GUIDEVIEW_MANAGER.frames.length + "]"
@@ -165,4 +167,18 @@ function toggle_animation(){
 function update_slider_pos() {
     var perc = $('#animation_position').val() / 100;
     currentTime = (animationLength / 1000) * perc;
+}
+
+function onmousemove_anim(evt){
+    var offset_x = (GAME_SIZE.x / 2) - (window.picture_width / 2);
+    var offset_y = (GAME_SIZE.y / 2) - (window.picture_height / 2);
+
+    var x = evt.pageX - canvas.offsetLeft - offset_x; // Position on the canvas X
+    var y = evt.pageY - canvas.offsetTop - offset_y;// Position on the canvas Y
+    if(x >= 0 && y >= 0 && x <= window.picture_width && y <= window.picture_height){
+        $('#debug').html("X: " + x + ", Y:" + y);
+    } else {
+        $('#debug').html("X: , Y:");
+        
+    }
 }
