@@ -8,8 +8,8 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
     // let cors = warp::cors()
     //     .allow_any_origin().allow_methods(&[warp::http::Method::DELETE]);
 
-    let view_delete = warp::path!("api" / "view" / String)
-        .and(warp::delete())
+    let view_delete = warp::delete()
+        .and(warp::path!("api" / "view" / String))
         .and(db_conn.clone())
         .and_then(view_delete_impl);
 
@@ -18,6 +18,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
 }
 
 async fn view_delete_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn Reply>, Rejection> {
+    log::info!("Deleting view {}", guid.clone());
     match video_queries::delete_view_with_guid(guid, &mut db_pool.clone()).await {
         Ok(_) => {},
         Err(err) => {
@@ -30,7 +31,7 @@ async fn view_delete_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Box<dyn
     }
     Ok(
         Box::new(
-            warp::reply::json(&json!({"status": "Ok", "message": "".to_string()}))
+            warp::reply::json(&json!({"status": "ok", "message": "".to_string()}))
         )
     )
 }  

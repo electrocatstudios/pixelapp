@@ -7,13 +7,18 @@
 
     <title>Saved Views</title>
 
-    <script type="text/javascript" src="/js/video/view_listing.js"></script>
+    <script type="text/javascript" src="/js/video/view_listing.js?t=123"></script>
     <script type='text/javascript' src='/js/keyHandlerUtils.js?t=124'></script>
     <script type='text/javascript' src='/js/utils.js'></script>
 
     <link href='/css/website.css' rel='stylesheet'>
     <link href='/css/skeleton.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <style>
+        .delete_hidden {
+            display:none;
+        }
+    </style>
 </head>
 
 <body style='background-color:rgb(27, 28, 29);font-family:helvetica; color: white;'>   
@@ -27,7 +32,14 @@
         </div>
     </div>
 
-    <br><br>
+    <div id='delete_confirm' class="container">
+        <div class="row">
+            <h1>Confirm deletion of view?</h1>
+            <button onclick="confirm_deletion()">Confirm</button>
+            <button onclick="cancel_deletion()">Cancel</button>
+        </div>
+    </div>
+
     <div id="coll_container" class="container">
         
       

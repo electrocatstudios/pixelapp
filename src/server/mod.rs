@@ -13,8 +13,7 @@ pub async fn start(addr: impl Into<SocketAddr>, db_conn: &mut BoxedFilter<(Sqlit
     let post_routes = post_routes::make_routes(&mut db_conn.clone()).await;
     let delete_routes = delete_routes::make_routes(&mut db_conn.clone()).await;
 
-    let routes = post_routes.or(delete_routes).or(get_routes);
-
+    let routes = delete_routes.or(post_routes).or(get_routes);
 
     warp::serve(routes)
         .run(addr)
