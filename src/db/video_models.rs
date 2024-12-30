@@ -40,7 +40,12 @@ impl VideoModel {
         let mut ret = VideoModel::new(guid);
         ret.frames = image_count;
 
-        let reader = BufReader::new(File::open(details.as_str()).expect("Cannot open file.txt"));
+        let reader = BufReader::new(
+            File::open(
+                details.as_str()).expect(
+                    format!("Cannot open {}", details.clone()).as_str()
+                )
+            );
         for (idx,line) in reader.lines().enumerate() {
             if idx == 0 {
                 ret.name = line.unwrap();
