@@ -63,7 +63,7 @@ function refresh_frames() {
                 var fr = ret.frames[i];
                 // console.log(fr)
                 var img_url = "/img/videoframe/" + guid + "/" + fr;
-                output += "<img width='100px' src='" + img_url + "' style='cursor:pointer;' onclick='load_image(" + i + ")'>";
+                output += "<img width='100px' src='" + img_url + "' style='cursor:pointer;' onclick='load_image(" + i + ")' onmouseover='show_image_index(" + i + ", " + fr + ")'>";
 
                 var img = new Image();
                 img.src = img_url;
@@ -229,7 +229,7 @@ function submit_new_view() {
     // Gather details and send them for rendering
     var name = $('#view_name').val();
     if (name === undefined || name === null || name === "") {
-        $('#error').html("Name cannot be blank");
+        $('#error').html("View Name cannot be blank");
         return;
     }
     var data = {
@@ -240,7 +240,8 @@ function submit_new_view() {
 
     for(var i=0;i<frames.length;i++){
         var f = frames[i];
-        var fv = frame_views[0]; // TODO: Get actual frame view, for now just one
+        var fv = get_best_fit_frame_view(i);
+        // var fv = frame_views[0]; // TODO: Get actual frame view, for now just one
         var nxt = {
             frame_id: f.frame,
             x: fv.x,
@@ -251,8 +252,6 @@ function submit_new_view() {
         data.frames.push(nxt);
     }
    
-    // console.log(data);
-
     var url = "/api/view_create";
     $.ajax({
         url: url,
@@ -278,4 +277,17 @@ function submit_new_view() {
         }
     })
 
+}
+
+function get_best_fit_frame_view(idx){
+    for(var i=idx;i>=0;i--){
+        if(frame_views[i]!==undefined && frame_views[i]!==null) {
+            return frame_views[i];
+        }
+    }
+}
+
+function show_image_index(idx, frame) {
+    var output = "Frame: [" + (idx + 1) + "] " + frame;
+    $('#frame_hover_display').html(output);
 }

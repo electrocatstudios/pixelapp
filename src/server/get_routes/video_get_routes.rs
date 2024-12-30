@@ -63,7 +63,7 @@ pub(super) async fn make_routes(db_conn: &mut BoxedFilter<(SqlitePool,)>) -> Box
         .and(db_conn.clone())
         .and_then(get_view_details_impl);
 
-    // GET /api/frame/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
+    // GET /api/frames/<guid>/<frame_count> - return index of ids of images that fit within range (evenly sampled)
     let get_frame_indexes = warp::path!("api" / "frames" / String / usize)
         .and(warp::filters::query::raw()
                .or(warp::any().map(|| String::default()))
@@ -149,7 +149,7 @@ async fn get_view_details_impl(guid: String, db_pool: Pool<Sqlite>) -> Result<Bo
     )
 }
 
-const MAX_FRAME_LIMIT: usize = 30;
+const MAX_FRAME_LIMIT: usize = 50;
 
 async fn get_frame_indexes_impl(guid: String, max_frames: usize, query_string: String,) -> Result<Box<dyn Reply>, Rejection> {
     let frame_count = match get_image_count_for_video(guid.clone()) {
@@ -169,16 +169,19 @@ async fn get_frame_indexes_impl(guid: String, max_frames: usize, query_string: S
     } else {
         max_frames
     };
-
+    
+    // Debug 
+    // println!("vid query {} -> {} [{}/{}]", vid_query.start, vid_query.end, vid_query.diff, max_frames);
+    
     let mut frames = Vec::<usize>::new();
-    if vid_query.diff != 0 && vid_query.diff < max_frames {
+    if vid_query.diff != 0 && vid_query.diff <= max_frames {
         frames = (vid_query.start..vid_query.end).collect();
     } else if max_frames + vid_query.start >= frame_count {
         frames = (vid_query.start..frame_count).collect();
     } else if frame_count > 0 && vid_query.diff > max_frames{
         let step = vid_query.diff as f64 / max_frames as f64;
         let mut cur = vid_query.start as f64;
-        while cur < vid_query.diff as f64 {
+        while cur < vid_query.end as f64 {
             frames.push(cur as usize);
             cur += step;
         }

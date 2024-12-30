@@ -47,16 +47,22 @@
             End: <input id="frame_end" value="" type="number" />
             <button onclick="refresh_frames()">Update</button>
         </div>
+        <div id='frame_hover_display' class="row">Frame: None</div>
         <div class="row" id="gallery_view">
 
         </div>
     </div>
-    <div id="debug"></div>
-    <canvas id="canvas" width="100%" height="100%"> <!-- width="800" height="400" -->
+
+    <div class="container">
+        <div class="row">
+        <div id="debug"></div>
+        </div>
+    </div>
+    <canvas id="canvas" > <!-- width="800" height="400" -->
         <p>Your browser does not support the canvas element.</p>
     </canvas>
     
-    <div id="coll_container" class="container">
+    <div id="details_container" class="container">
         <div class="row" id="image_info">
         </div>
         <div class="row" >
@@ -72,6 +78,7 @@
 
 
     <div class='container'>
+        <div class="row" style="color: red" id="error"></div>
         <div class="row choose_menu_items">
             <div class='choose_menu_item' style='cursor: pointer;' onclick="submit_new_view()">
                 Create View
